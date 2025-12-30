@@ -307,42 +307,6 @@ curl "http://localhost:3000/api/v2/hianime/schedule?date=2024-01-01"
 
 ---
 
-## Response Format
-
-All endpoints return JSON with this structure:
-
-**Success Response:**
-```json
-{
-  "success": true,
-  "data": {
-    // Response data
-  }
-}
-```
-
-**Error Response:**
-```json
-{
-  "success": false,
-  "error": "Error message"
-}
-```
-
-## Tech Stack
-
-- **Framework:** Hono
-- **Scraping:** Cheerio, Axios
-- **Runtime:** Node.js
-- **Language:** JavaScript (ES Modules)
-
-## Development
-
-Run with auto-reload:
-
-```bash
-npm run dev
-```
 
 ## License
 
