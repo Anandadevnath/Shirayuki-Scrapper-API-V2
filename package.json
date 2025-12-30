@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js"
+    "start": "nodemon index.js",
+    "dev": "nodemon --watch index.js"
   },
   "keywords": ["anime", "scraper", "api"],
   "author": "",
@@ -21,6 +21,7 @@
     "pino": "^9.7.0"
   },
   "devDependencies": {
+    "nodemon": "^3.1.9",
     "pino-pretty": "^13.0.0"
   }
 }

@@ -1,8 +1,5 @@
 import { getHomePage } from '../scrapper/home.js';
 
-/**
- * Controller for home page endpoint
- */
 export const homeController = async (c) => {
   try {
     const data = await getHomePage();
