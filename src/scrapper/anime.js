@@ -4,9 +4,6 @@ import axios from 'axios';
 const SRC_BASE_URL = 'https://hianimez.to';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
-/**
- * Extract anime items from selector
- */
 const extractAnimes = ($, selector) => {
   const animes = [];
   
@@ -64,9 +61,6 @@ const extractAnimes = ($, selector) => {
   return animes;
 };
 
-/**
- * Extract most popular anime items
- */
 const extractMostPopularAnimes = ($, selector) => {
   const animes = [];
 
@@ -113,9 +107,6 @@ const extractMostPopularAnimes = ($, selector) => {
   return animes;
 };
 
-/**
- * Get detailed anime information
- */
 export async function getAnimeAboutInfo(animeId) {
   const res = {
     anime: {

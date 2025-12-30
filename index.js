@@ -6,6 +6,8 @@ import env from './src/config/env.js';
 import homeRouter from './src/router/home.js';
 import azlistRouter from './src/router/azlist.js';
 import animeRouter from './src/router/anime.js';
+import searchRouter from './src/router/search.js';
+import searchAdvancedRouter from './src/router/search-advanced.js';
 
 const app = new Hono();
 
@@ -13,7 +15,7 @@ const app = new Hono();
 app.use('*', logger());
 app.use('*', cors());
 
-// Root endpoint
+// Root
 app.get('/', (c) => {
   return c.json({
     message: 'Shirayuki Scrapper API V2',
@@ -21,7 +23,9 @@ app.get('/', (c) => {
     endpoints: [
       '/api/v2/hianime/home',
       '/api/v2/hianime/azlist/:sortOption?page=:page',
-      '/api/v2/hianime/anime/:animeId'
+      '/api/v2/hianime/anime/:animeId',
+      '/api/v2/hianime/search?q=titan&page=1',
+      '/api/v2/hianime/search?q=girls&genres=action,adventure&type=movie&sort=score&season=spring&language=dub&status=finished-airing&rated=pg-13&start_date=2014-0-0&score=good'
     ]
   });
 });
@@ -30,8 +34,9 @@ app.get('/', (c) => {
 app.route('/api/v2/hianime/home', homeRouter);
 app.route('/api/v2/hianime/azlist', azlistRouter);
 app.route('/api/v2/hianime/anime', animeRouter);
+app.route('/api/v2/hianime/search', searchRouter);
+app.route('/api/v2/hianime/search/advanced', searchAdvancedRouter);
 
-// 404 handler
 app.notFound((c) => {
   return c.json({
     success: false,
@@ -39,7 +44,6 @@ app.notFound((c) => {
   }, 404);
 });
 
-// Error handler
 app.onError((err, c) => {
   console.error('Server error:', err);
   return c.json({
@@ -48,7 +52,6 @@ app.onError((err, c) => {
   }, 500);
 });
 
-// Start server
 const port = env.PORT;
 console.log(`http://localhost:${port}`);
 
