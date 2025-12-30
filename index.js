@@ -11,6 +11,10 @@ import searchAdvancedRouter from './src/router/search-advanced.js';
 import searchSuggestionRouter from './src/router/search-suggestion.js';
 import producerRouter from './src/router/producer.js';
 import genreRouter from './src/router/genre.js';
+import categoryRouter from './src/router/category.js';
+import scheduleRouter from './src/router/schedule.js';
+import episodesRouter from './src/router/episodes.js';
+import nextEpisodeRouter from './src/router/next-episode.js';
 
 const app = new Hono();
 
@@ -31,7 +35,11 @@ app.get('/', (c) => {
       '/api/v2/hianime/search?q=girls&genres=action,adventure&type=movie&sort=score&season=spring&language=dub&status=finished-airing&rated=pg-13&start_date=2014-0-0&score=good',
       '/api/v2/hianime/search/suggestion?q=titan',
       '/api/v2/hianime/producer/:name?page=:page',
-      '/api/v2/hianime/genre/:name?page=:page'
+      '/api/v2/hianime/genre/:name?page=:page',
+      '/api/v2/hianime/category/:name?page=:page',
+      '/api/v2/hianime/schedule?date=2024-01-01',
+      '/api/v2/hianime/anime/:animeId/episodes',
+      '/api/v2/hianime/anime/:animeId/next-episode-schedule'
     ]
   });
 });
@@ -45,6 +53,10 @@ app.route('/api/v2/hianime/search/advanced', searchAdvancedRouter);
 app.route('/api/v2/hianime/search/suggestion', searchSuggestionRouter);
 app.route('/api/v2/hianime/producer', producerRouter);
 app.route('/api/v2/hianime/genre', genreRouter);
+app.route('/api/v2/hianime/category', categoryRouter);
+app.route('/api/v2/hianime/schedule', scheduleRouter);
+app.route('/api/v2/hianime/anime', episodesRouter);
+app.route('/api/v2/hianime/anime', nextEpisodeRouter);
 
 app.notFound((c) => {
   return c.json({

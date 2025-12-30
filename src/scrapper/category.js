@@ -61,8 +61,9 @@ const extractAnimes = ($, selector) => {
   return animes;
 };
 
-const extractMostPopularAnimes = ($, selector) => {
+const extractTop10Animes = ($, period) => {
   const animes = [];
+  const selector = `#top-viewed-${period} ul li`;
 
   $(selector).each((_, el) => {
     animes.push({
@@ -71,10 +72,11 @@ const extractMostPopularAnimes = ($, selector) => {
         ?.attr('href')
         ?.slice(1)
         .trim() || null,
+      rank: Number($(el).find('.film-number span')?.text()?.trim()) || null,
       name: $(el).find('.film-detail .dynamic-name')?.text()?.trim() || null,
       jname: $(el)
-        .find('.film-detail .film-name .dynamic-name')
-        .attr('data-jname')
+        .find('.film-detail .dynamic-name')
+        ?.attr('data-jname')
         ?.trim() || null,
       poster: $(el)
         .find('.film-poster .film-poster-img')
@@ -83,53 +85,48 @@ const extractMostPopularAnimes = ($, selector) => {
       episodes: {
         sub: Number(
           $(el)
-            ?.find('.fd-infor .tick .tick-sub')
+            .find('.film-detail .fd-infor .tick-item.tick-sub')
             ?.text()
             ?.trim()
         ) || null,
         dub: Number(
           $(el)
-            ?.find('.fd-infor .tick .tick-dub')
+            .find('.film-detail .fd-infor .tick-item.tick-dub')
             ?.text()
             ?.trim()
         ) || null,
       },
-      type: $(el)
-        ?.find('.fd-infor .tick')
-        ?.text()
-        ?.trim()
-        ?.replace(/[\s\n]+/g, ' ')
-        ?.split(' ')
-        ?.pop() || null,
     });
   });
 
   return animes;
 };
 
-export async function getGenreAnime(genreName, page = 1) {
+export async function getAnimeCategory(category, page = 1) {
   const res = {
-    // there's a typo with hianime where "martial" arts is "marial" arts
-    genreName: genreName === 'martial-arts' ? 'marial-arts' : genreName.trim(),
     animes: [],
     genres: [],
-    topAiringAnimes: [],
-    totalPages: 1,
+    top10Animes: {
+      today: [],
+      week: [],
+      month: [],
+    },
+    category,
+    totalPages: 0,
     hasNextPage: false,
     currentPage: (Number(page) || 0) < 1 ? 1 : Number(page),
   };
 
-  genreName = res.genreName;
-  page = res.currentPage;
-
   try {
-    if (genreName === '') {
-      throw new Error('Invalid genre name');
+    if (category.trim() === '') {
+      throw new Error('Invalid anime category');
     }
 
-    const genreUrl = `${SRC_BASE_URL}/genre/${genreName}?page=${page}`;
+    page = res.currentPage;
 
-    const { data } = await axios.get(genreUrl, {
+    const scrapeUrl = `${SRC_BASE_URL}/${category}?page=${page}`;
+
+    const { data } = await axios.get(scrapeUrl, {
       headers: {
         'User-Agent': USER_AGENT,
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
@@ -141,8 +138,8 @@ export async function getGenreAnime(genreName, page = 1) {
 
     const selector = '#main-content .tab-content .film_list-wrap .flw-item';
 
-    const genreNameSelector = '#main-content .block_area .block_area-header .cat-heading';
-    res.genreName = $(genreNameSelector)?.text()?.trim() ?? genreName;
+    const categoryNameSelector = '#main-content .block_area .block_area-header .cat-heading';
+    res.category = $(categoryNameSelector)?.text()?.trim() ?? category;
 
     // Check pagination
     res.hasNextPage =
@@ -179,12 +176,26 @@ export async function getGenreAnime(genreName, page = 1) {
       res.genres.push($(el).text().trim());
     });
 
-    // Top Airing Animes
-    const topAiringSelector = '#main-sidebar .block_area.block_area_sidebar.block_area-realtime .anif-block-ul ul li';
-    res.topAiringAnimes = extractMostPopularAnimes($, topAiringSelector);
+    // Top 10 Animes
+    const top10AnimeSelector = '#main-sidebar .block_area-realtime [id^="top-viewed-"]';
+    $(top10AnimeSelector).each((_, el) => {
+      const period = $(el).attr('id')?.split('-')?.pop()?.trim();
+
+      if (period === 'day') {
+        res.top10Animes.today = extractTop10Animes($, period);
+        return;
+      }
+      if (period === 'week') {
+        res.top10Animes.week = extractTop10Animes($, period);
+        return;
+      }
+      if (period === 'month') {
+        res.top10Animes.month = extractTop10Animes($, period);
+      }
+    });
 
     return res;
   } catch (error) {
-    throw new Error(`Failed to get genre animes: ${error.message}`);
+    throw new Error(`Failed to get category animes: ${error.message}`);
   }
 }
