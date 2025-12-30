@@ -1,7 +1,6 @@
 # Shirayuki Scrapper API V2
 
-This is an extended version of the Aniwatch scraper. It supports streaming URLs
-and has been fully converted to JavaScript.
+This is an extended Aniwatch scraper with support for direct embedded streaming URLs. You can play streams instantly or host your own streaming URLs
 
 ## Features
 
