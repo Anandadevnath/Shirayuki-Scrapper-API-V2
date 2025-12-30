@@ -37,23 +37,29 @@ export async function getEpisodeServers(animeEpisodeId) {
     res.episodeNo = Number($('.server-notice strong').text().split(' ').pop()) || 0;
 
     $('.ps_-block.ps_-block-sub.servers-sub .ps__-list .server-item').each((_, el) => {
+      const serverName = $(el).find('a').text().toLowerCase().trim();
       res.sub.push({
-        serverName: $(el).find('a').text().toLowerCase().trim(),
+        serverName: serverName,
         serverId: Number($(el)?.attr('data-server-id')?.trim()) || null,
+        streaming_url: `https://animefrenzy.cc/ajax/index.php?episodeId=${encodeURIComponent(animeEpisodeId)}&server=${serverName}&category=sub`,
       });
     });
 
     $('.ps_-block.ps_-block-sub.servers-dub .ps__-list .server-item').each((_, el) => {
+      const serverName = $(el).find('a').text().toLowerCase().trim();
       res.dub.push({
-        serverName: $(el).find('a').text().toLowerCase().trim(),
+        serverName: serverName,
         serverId: Number($(el)?.attr('data-server-id')?.trim()) || null,
+        streaming_url: `https://animefrenzy.cc/ajax/index.php?episodeId=${encodeURIComponent(animeEpisodeId)}&server=${serverName}&category=dub`,
       });
     });
 
     $('.ps_-block.ps_-block-sub.servers-raw .ps__-list .server-item').each((_, el) => {
+      const serverName = $(el).find('a').text().toLowerCase().trim();
       res.raw.push({
-        serverName: $(el).find('a').text().toLowerCase().trim(),
+        serverName: serverName,
         serverId: Number($(el)?.attr('data-server-id')?.trim()) || null,
+        streaming_url: `https://animefrenzy.cc/ajax/index.php?episodeId=${encodeURIComponent(animeEpisodeId)}&server=${serverName}&category=raw`,
       });
     });
 
