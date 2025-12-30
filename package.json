@@ -1,0 +1,26 @@
+{
+  "name": "shirayuki-scrapper-api-v2",
+  "version": "1.0.0",
+  "description": "Shirayuki Scrapper API V2",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": ["anime", "scraper", "api"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@hono/node-server": "^1.14.2",
+    "axios": "^1.7.9",
+    "cheerio": "^1.1.2",
+    "dotenv": "^16.5.0",
+    "envalid": "^8.0.0",
+    "hono": "^4.7.10",
+    "pino": "^9.7.0"
+  },
+  "devDependencies": {
+    "pino-pretty": "^13.0.0"
+  }
+}
