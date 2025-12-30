@@ -1,6 +1,6 @@
 # Shirayuki Scrapper API V2
 
-This is an extended version of the Aniwatch scraper. It adds support for fetching streaming URLs from
+This is an extended version of the Aniwatch scraper. It supports streaming URLs from
 /api/v2/hianime/episode/servers?animeEpisodeId=one-punch-man-season-3-19932&ep=155745
 and has been fully converted to JavaScript.
 
