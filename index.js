@@ -9,6 +9,8 @@ import animeRouter from './src/router/anime.js';
 import searchRouter from './src/router/search.js';
 import searchAdvancedRouter from './src/router/search-advanced.js';
 import searchSuggestionRouter from './src/router/search-suggestion.js';
+import producerRouter from './src/router/producer.js';
+import genreRouter from './src/router/genre.js';
 
 const app = new Hono();
 
@@ -27,7 +29,9 @@ app.get('/', (c) => {
       '/api/v2/hianime/anime/:animeId',
       '/api/v2/hianime/search?q=titan&page=1',
       '/api/v2/hianime/search?q=girls&genres=action,adventure&type=movie&sort=score&season=spring&language=dub&status=finished-airing&rated=pg-13&start_date=2014-0-0&score=good',
-      '/api/v2/hianime/search/suggestion?q=titan'
+      '/api/v2/hianime/search/suggestion?q=titan',
+      '/api/v2/hianime/producer/:name?page=:page',
+      '/api/v2/hianime/genre/:name?page=:page'
     ]
   });
 });
@@ -39,6 +43,8 @@ app.route('/api/v2/hianime/anime', animeRouter);
 app.route('/api/v2/hianime/search', searchRouter);
 app.route('/api/v2/hianime/search/advanced', searchAdvancedRouter);
 app.route('/api/v2/hianime/search/suggestion', searchSuggestionRouter);
+app.route('/api/v2/hianime/producer', producerRouter);
+app.route('/api/v2/hianime/genre', genreRouter);
 
 app.notFound((c) => {
   return c.json({
