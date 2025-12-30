@@ -1,6 +1,8 @@
 # Shirayuki Scrapper API V2
 
-A web scraper API for anime data from hianimez.to, built with Hono framework.
+This is an extended version of the Aniwatch scraper. It adds support for fetching streaming URLs from
+/api/v2/hianime/episode/servers?animeEpisodeId=one-punch-man-season-3-19932&ep=155745
+and has been fully converted to JavaScript.
 
 ## Features
 
@@ -11,28 +13,6 @@ A web scraper API for anime data from hianimez.to, built with Hono framework.
 - 📅 Release schedules
 - 🎭 Genre and producer filtering
 - 📊 Category browsing
-
-## Installation
-
-```bash
-npm install
-```
-
-## Configuration
-
-Create a `.env` file in the root directory:
-
-```env
-PORT=3000
-```
-
-## Running
-
-```bash
-npm start
-```
-
-Server will start at `http://localhost:3000`
 
 ## API Endpoints
 
