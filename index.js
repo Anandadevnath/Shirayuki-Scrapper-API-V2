@@ -15,6 +15,7 @@ import categoryRouter from './src/router/category.js';
 import scheduleRouter from './src/router/schedule.js';
 import episodesRouter from './src/router/episodes.js';
 import nextEpisodeRouter from './src/router/next-episode.js';
+import episodeServersRouter from './src/router/episode-servers.js';
 
 const app = new Hono();
 
@@ -39,7 +40,8 @@ app.get('/', (c) => {
       '/api/v2/hianime/category/:name?page=:page',
       '/api/v2/hianime/schedule?date=2024-01-01',
       '/api/v2/hianime/anime/:animeId/episodes',
-      '/api/v2/hianime/anime/:animeId/next-episode-schedule'
+      '/api/v2/hianime/anime/:animeId/next-episode-schedule',
+      '/api/v2/hianime/episode/servers?animeEpisodeId=:id'
     ]
   });
 });
@@ -57,6 +59,7 @@ app.route('/api/v2/hianime/category', categoryRouter);
 app.route('/api/v2/hianime/schedule', scheduleRouter);
 app.route('/api/v2/hianime/anime', episodesRouter);
 app.route('/api/v2/hianime/anime', nextEpisodeRouter);
+app.route('/api/v2/hianime/episode', episodeServersRouter);
 
 app.notFound((c) => {
   return c.json({

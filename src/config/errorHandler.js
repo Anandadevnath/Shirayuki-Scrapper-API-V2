@@ -1,7 +1,3 @@
-/**
- * Global error handler for the API
- */
-
 export default function errorHandler(err, c) {
   console.error('Error:', err);
 
