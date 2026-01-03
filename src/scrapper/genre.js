@@ -1,6 +1,6 @@
 import { load, axios } from '../utils/scrapper-deps.js';
 import { SRC_BASE_URL, USER_AGENT } from '../utils/constants.js';
-import { extractAnimes } from '../utils/scrapper-helpers.js';
+import { extractAnimes, extractMostPopularAnimes } from '../utils/scrapper-helpers.js';
 
 export async function getGenreAnime(genreName, page = 1) {
   const res = {
