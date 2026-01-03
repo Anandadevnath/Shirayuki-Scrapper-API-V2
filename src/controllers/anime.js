@@ -1,8 +1,5 @@
 import { getAnimeAboutInfo } from '../scrapper/anime.js';
 
-/**
- * Controller for anime info endpoint
- */
 export const animeController = async (c) => {
   try {
     const animeId = c.req.param('animeId');

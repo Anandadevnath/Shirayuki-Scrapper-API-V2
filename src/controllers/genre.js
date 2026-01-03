@@ -1,6 +1,5 @@
 import { getGenreAnime } from '../scrapper/genre.js';
 
-
 export const genreController = async (c) => {
   try {
     const name = c.req.param('name');

@@ -1,8 +1,5 @@
 import { getAnimeSearchSuggestion } from '../scrapper/search-suggestion.js';
 
-/**
- * Controller for search suggestion endpoint
- */
 export const searchSuggestionController = async (c) => {
   try {
     const q = c.req.query('q');

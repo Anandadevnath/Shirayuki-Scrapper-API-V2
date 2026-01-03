@@ -1,10 +1,7 @@
-import { load } from 'cheerio';
-import axios from 'axios';
-
-const SRC_BASE_URL = 'https://hianimez.to';
+import { load, axios } from '../utils/scrapper-deps.js';
+import { SRC_BASE_URL, USER_AGENT } from '../utils/constants.js';
 const SRC_AJAX_URL = `${SRC_BASE_URL}/ajax`;
 const SRC_HOME_URL = `${SRC_BASE_URL}/home`;
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
 export async function getAnimeSearchSuggestion(q) {
   const res = {

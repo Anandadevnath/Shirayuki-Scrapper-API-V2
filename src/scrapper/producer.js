@@ -1,72 +1,7 @@
-import { load } from 'cheerio';
-import axios from 'axios';
+import { load, axios } from '../utils/scrapper-deps.js';
+import { SRC_BASE_URL, USER_AGENT } from '../utils/constants.js';
+import { extractAnimes, extractMostPopularAnimes } from '../utils/scrapper-helpers.js';
 
-const SRC_BASE_URL = 'https://hianimez.to';
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
-
-/**
- * Extract anime items from selector
- */
-const extractAnimes = ($, selector) => {
-  const animes = [];
-  
-  $(selector).each((_, el) => {
-    const animeId = $(el)
-      .find('.film-detail .film-name .dynamic-name')
-      ?.attr('href')
-      ?.slice(1)
-      .split('?ref=search')[0] || null;
-
-    animes.push({
-      id: animeId,
-      name: $(el)
-        .find('.film-detail .film-name .dynamic-name')
-        ?.text()
-        ?.trim(),
-      jname: $(el)
-        .find('.film-detail .film-name .dynamic-name')
-        ?.attr('data-jname')
-        ?.trim() || null,
-      poster: $(el)
-        .find('.film-poster .film-poster-img')
-        ?.attr('data-src')
-        ?.trim() || null,
-      duration: $(el)
-        .find('.film-detail .fd-infor .fdi-item.fdi-duration')
-        ?.text()
-        ?.trim(),
-      type: $(el)
-        .find('.film-detail .fd-infor .fdi-item:nth-of-type(1)')
-        ?.text()
-        ?.trim(),
-      rating: $(el).find('.film-poster .tick-rate')?.text()?.trim() || null,
-      episodes: {
-        sub: Number(
-          $(el)
-            .find('.film-poster .tick-sub')
-            ?.text()
-            ?.trim()
-            .split(' ')
-            .pop()
-        ) || null,
-        dub: Number(
-          $(el)
-            .find('.film-poster .tick-dub')
-            ?.text()
-            ?.trim()
-            .split(' ')
-            .pop()
-        ) || null,
-      },
-    });
-  });
-
-  return animes;
-};
-
-/**
- * Extract top 10 anime items
- */
 const extractTop10Animes = ($, period) => {
   const animes = [];
   const selector = `#top-viewed-${period} ul li`;
@@ -108,9 +43,6 @@ const extractTop10Animes = ($, period) => {
   return animes;
 };
 
-/**
- * Extract most popular anime items
- */
 const extractMostPopularAnimes = ($, selector) => {
   const animes = [];
 
@@ -157,9 +89,6 @@ const extractMostPopularAnimes = ($, selector) => {
   return animes;
 };
 
-/**
- * Get anime by producer
- */
 export async function getProducerAnimes(producerName, page = 1) {
   const res = {
     producerName,

@@ -1,6 +1,6 @@
 # Shirayuki Scrapper API V2
 
-This JavaScript-based scraper is an extended version of the Aniwatch scraper. It adds support for direct embedded streaming URLs for instant playback, while also allowing you to host your own streaming URLs.
+This JavaScript-based scraper is an extended version of the Aniwatch scraper. It adds support for direct embedded streaming URLs for instant playback.
 
 ## Features
 
@@ -11,6 +11,28 @@ This JavaScript-based scraper is an extended version of the Aniwatch scraper. It
 - 📅 Release schedules
 - 🎭 Genre and producer filtering
 - 📊 Category browsing
+
+## Contribute
+
+We welcome contributions from the community! To contribute:
+
+1. **Fork** this repository and clone your fork locally.
+2. **Create a new branch** for your feature or bugfix:
+  ```bash
+  git checkout -b your-feature-name
+  ```
+3. **Make your changes** and add tests if applicable.
+4. **Commit** your changes with a clear message:
+  ```bash
+  git commit -m "Add your message here"
+  ```
+5. **Push** to your fork:
+  ```bash
+  git push origin your-feature-name
+  ```
+6. **Open a Pull Request** on GitHub and describe your changes.
+
+Please follow the code style and conventions used in this project. If you have any questions, feel free to open an issue.
 
 ## API Endpoints
 
