@@ -43,52 +43,6 @@ const extractTop10Animes = ($, period) => {
   return animes;
 };
 
-const extractMostPopularAnimes = ($, selector) => {
-  const animes = [];
-
-  $(selector).each((_, el) => {
-    animes.push({
-      id: $(el)
-        .find('.film-detail .dynamic-name')
-        ?.attr('href')
-        ?.slice(1)
-        .trim() || null,
-      name: $(el).find('.film-detail .dynamic-name')?.text()?.trim() || null,
-      jname: $(el)
-        .find('.film-detail .film-name .dynamic-name')
-        .attr('data-jname')
-        ?.trim() || null,
-      poster: $(el)
-        .find('.film-poster .film-poster-img')
-        ?.attr('data-src')
-        ?.trim() || null,
-      episodes: {
-        sub: Number(
-          $(el)
-            ?.find('.fd-infor .tick .tick-sub')
-            ?.text()
-            ?.trim()
-        ) || null,
-        dub: Number(
-          $(el)
-            ?.find('.fd-infor .tick .tick-dub')
-            ?.text()
-            ?.trim()
-        ) || null,
-      },
-      type: $(el)
-        ?.find('.fd-infor .tick')
-        ?.text()
-        ?.trim()
-        ?.replace(/[\s\n]+/g, ' ')
-        ?.split(' ')
-        ?.pop() || null,
-    });
-  });
-
-  return animes;
-};
-
 export async function getProducerAnimes(producerName, page = 1) {
   const res = {
     producerName,
