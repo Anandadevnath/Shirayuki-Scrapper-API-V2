@@ -327,11 +327,5 @@ curl "http://localhost:3000/api/v2/hianime/schedule?date=2024-01-01"
 
 ---
 
-
 ## License
-
-MIT
-
-## Disclaimer
-
-This project is for educational purposes only. Please respect the terms of service of the source website.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.

@@ -41,7 +41,6 @@ app.get('/', (c) => {
       category: '/api/v2/hianime/category/tv?page=2',
       schedule: '/api/v2/hianime/schedule?date=2024-01-01',
       episodeServers: '/api/v2/hianime/episode/servers?animeEpisodeId=steinsgate-3?ep=213',
-      episodeSources: '/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3?ep=213&server=hd-1&category=sub'
     }
   });
 });
