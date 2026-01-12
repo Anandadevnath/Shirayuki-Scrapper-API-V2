@@ -16,6 +16,7 @@ import scheduleRouter from './src/router/schedule.js';
 import episodesRouter from './src/router/episodes.js';
 import nextEpisodeRouter from './src/router/next-episode.js';
 import episodeServersRouter from './src/router/episode-servers.js';
+import hianimeEpisodeSourcesRouter from './src/router/streaming-server.js';
 
 const app = new Hono();
 
@@ -41,6 +42,7 @@ app.get('/', (c) => {
       category: '/api/v2/hianime/category/tv?page=2',
       schedule: '/api/v2/hianime/schedule?date=2024-01-01',
       episodeServers: '/api/v2/hianime/episode/servers?animeEpisodeId=steinsgate-3?ep=213',
+      episodeSources: '/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-1&category=dub',
     }
   });
 });
@@ -59,6 +61,7 @@ app.route('/api/v2/hianime/schedule', scheduleRouter);
 app.route('/api/v2/hianime/anime', episodesRouter);
 app.route('/api/v2/hianime/anime', nextEpisodeRouter);
 app.route('/api/v2/hianime/episode', episodeServersRouter);
+app.route('/api/v2/hianime/episode/sources', hianimeEpisodeSourcesRouter);
 
 app.notFound((c) => {
   return c.json({

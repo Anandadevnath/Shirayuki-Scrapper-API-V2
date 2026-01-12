@@ -327,5 +327,52 @@ curl "http://localhost:3000/api/v2/hianime/schedule?date=2024-01-01"
 
 ---
 
+### Streaming Sources (NEW)
+
+Get direct streaming source, captions, and skip info for an episode.
+
+```bash
+GET /api/v2/hianime/episode/sources?animeEpisodeId=:animeEpisodeId&ep=:ep&server=:server&category=:category
+```
+
+**Parameters:**
+- `animeEpisodeId`: Anime episode ID (e.g., `steinsgate-3`)
+- `ep`: Episode number (e.g., `230`)
+- `server`: Server name (e.g., `hd-1`)
+- `category`: `sub` or `dub`
+
+**Example:**
+```bash
+curl "http://localhost:3000/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-1&category=dub"
+```
+
+**Response:**
+```json
+{
+  "status": 200,
+  "message": "Successful",
+  "video": {
+    "type": "m3u8",
+    "source": {
+      "url": "https://animo-proxy.vercel.app/api/proxy?...",
+      "viaProxy": false
+    }
+  },
+  "captions": {
+    "tracks": [
+      { "file": ".../eng-0.vtt", "label": "English", "kind": "captions", "default": true },
+      { "file": ".../por-2.vtt", "label": "Portuguese", "kind": "captions" },
+      { "file": ".../spa-1.vtt", "label": "Spanish", "kind": "captions" }
+    ]
+  },
+  "skip": [
+    { "start": 642, "end": 728, "name": "Skip Intro" },
+    { "start": 1337, "end": 1426, "name": "Skip Outro" }
+  ]
+}
+```
+
+---
+
 ## License
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.

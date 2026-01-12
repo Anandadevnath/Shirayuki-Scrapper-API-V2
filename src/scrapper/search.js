@@ -1,4 +1,3 @@
-
 import { load, axios } from '../utils/scrapper-deps.js';
 import { SRC_BASE_URL, USER_AGENT } from '../utils/constants.js';
 import { extractAnimes, extractMostPopularAnimes } from '../utils/scrapper-helpers.js';
@@ -39,7 +38,6 @@ export async function getAnimeSearchResults(q, page = 1) {
 
     const selector = '#main-content .tab-content .film_list-wrap .flw-item';
 
-    // Check pagination
     res.hasNextPage =
       $('.pagination > li').length > 0
         ? $('.pagination li.active').length > 0
