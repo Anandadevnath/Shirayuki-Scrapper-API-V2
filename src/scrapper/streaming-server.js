@@ -3,7 +3,7 @@ import axios from 'axios';
 async function getStreamingServer({ animeEpisodeId, ep, server, category }) {
   const type = category === 'dub' ? 'dub' : 'sub';
   const episodeId = `${animeEpisodeId}::ep=${ep}`;
-  const apiUrl = `https://v0-api-gateway-creation-one.vercel.app/api/embed-url-extractor?episodeId=${encodeURIComponent(episodeId)}&server=${server.toUpperCase()}&type=${type}`;
+  const apiUrl = `https://hianimez-red.vercel.app/api/v1/direct/${server}/${episodeId}/${type}`;
 
   try {
     const { data } = await axios.get(apiUrl);
