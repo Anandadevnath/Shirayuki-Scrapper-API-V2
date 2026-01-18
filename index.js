@@ -17,6 +17,7 @@ import episodesRouter from './src/router/episodes.js';
 import nextEpisodeRouter from './src/router/next-episode.js';
 import episodeServersRouter from './src/router/episode-servers.js';
 import hianimeEpisodeSourcesRouter from './src/router/streaming-server.js';
+import proxyRouter from './src/router/proxy.js';
 
 const app = new Hono();
 
@@ -60,8 +61,10 @@ app.route('/api/v2/hianime/category', categoryRouter);
 app.route('/api/v2/hianime/schedule', scheduleRouter);
 app.route('/api/v2/hianime/anime', episodesRouter);
 app.route('/api/v2/hianime/anime', nextEpisodeRouter);
+
 app.route('/api/v2/hianime/episode', episodeServersRouter);
 app.route('/api/v2/hianime/episode/sources', hianimeEpisodeSourcesRouter);
+app.route('/api/v2/hianime/proxy', proxyRouter);
 
 app.notFound((c) => {
   return c.json({
