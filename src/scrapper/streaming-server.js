@@ -9,13 +9,13 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'hd-2', categor
     };
   }
 
-  const baseUrl = 'https://hianimez-red.vercel.app';
-  const serverName = encodeURIComponent(server);
+  const baseUrl = 'https://api.animo.qzz.io';
   const episodeId = encodeURIComponent(animeEpisodeId);
   const epParam = encodeURIComponent(String(ep));
+  const serverName = encodeURIComponent(server);
   const categoryName = encodeURIComponent(category);
 
-  const apiUrl = `${baseUrl}/api/v1/direct/${serverName}/${episodeId}::ep=${epParam}/${categoryName}`;
+  const apiUrl = `${baseUrl}/api/v1/stream?id=${episodeId}::ep=${epParam}&type=${categoryName}&server=${serverName}`;
   console.log('[getStreamingServer] Params:', { animeEpisodeId, ep, server, category });
   console.log('[getStreamingServer] Built URL:', apiUrl);
 

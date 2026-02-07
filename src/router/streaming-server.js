@@ -12,7 +12,11 @@ hianimeEpisodeSourcesRouter.get('/', async (c) => {
     return c.json({ status: 400, message: 'Missing required query parameters.' }, 400);
   }
   const data = await getStreamingServer({ animeEpisodeId, ep, server, category });
-  return c.json(data);
+  if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+    return c.json(data);
+  } else {
+    return c.json({ success: false, data: null, ...data });
+  }
 });
 
 export default hianimeEpisodeSourcesRouter;
