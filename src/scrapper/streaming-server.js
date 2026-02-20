@@ -9,13 +9,12 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'hd-2', categor
     };
   }
 
-  const baseUrl = 'https://api.animo.qzz.io';
-  const episodeId = encodeURIComponent(animeEpisodeId);
-  const epParam = encodeURIComponent(String(ep));
+  const baseUrl = 'https://nothing-2-zeta.vercel.app';
+  const episodeIdParam = encodeURIComponent(`${animeEpisodeId}?ep=${ep}`);
   const serverName = encodeURIComponent(server);
   const categoryName = encodeURIComponent(category);
 
-  const apiUrl = `${baseUrl}/api/v1/stream?id=id=${episodeId}::ep=${epParam}&type=${categoryName}&server=${serverName}`;
+  const apiUrl = `${baseUrl}/api/v2/hianime/episode/sources?animeEpisodeId=${episodeIdParam}&server=${serverName}&category=${categoryName}`;
   console.log('[getStreamingServer] Params:', { animeEpisodeId, ep, server, category });
   console.log('[getStreamingServer] Built URL:', apiUrl);
 
