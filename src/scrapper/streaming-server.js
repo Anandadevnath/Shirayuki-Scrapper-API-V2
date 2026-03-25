@@ -3,7 +3,6 @@ import { USER_AGENT } from '../utils/constants.js';
 
 const KAIDO_BASE_URL = 'https://kaido.to';
 const KAIDO_AJAX_URL = `${KAIDO_BASE_URL}/ajax`;
-const RAPID_CLOUD_BASE_URL = 'https://rapid-cloud.co';
 
 function normalizeServerName(server = 'vidcloud') {
   const value = String(server).toLowerCase().trim();
@@ -41,10 +40,37 @@ function collectM3u8Links(value, output = new Set()) {
   return output;
 }
 
+function normalizeTracks(tracks) {
+  if (!Array.isArray(tracks)) return [];
+
+  return tracks
+    .filter((track) => track && typeof track === 'object' && track.file)
+    .map((track) => ({
+      url: track.file,
+      label: track.label || null,
+      kind: track.kind || null,
+      default: Boolean(track.default),
+    }));
+}
+
 function getIframeIdFromLink(link) {
   if (!link || typeof link !== 'string') return null;
   const match = link.match(/\/e-1\/([^/?]+)/i);
   return match?.[1] || null;
+}
+
+function collectServerCandidates($, category) {
+  const serverCandidates = [];
+
+  $(`.servers-${category} .server-item`).each((_, el) => {
+    const serverName = $(el).find('a').text().toLowerCase().trim();
+    const serverId = Number($(el).attr('data-id') || $(el).attr('data-server-id')) || null;
+    if (serverName && serverId) {
+      serverCandidates.push({ serverName, serverId });
+    }
+  });
+
+  return serverCandidates;
 }
 
 async function getRapidCloudSources(iframeLink) {
@@ -79,7 +105,6 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'vidcloud', cat
   if (!animeEpisodeId || ep === undefined || ep === null || ep === '') {
     console.error('[getStreamingServer] Missing parameters:', { animeEpisodeId, ep, server, category });
     return {
-      success: false,
       status: 400,
       message: 'Missing required parameters: animeEpisodeId and ep',
     };
@@ -124,7 +149,6 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'vidcloud', cat
 
     if (!serversResponse.data?.status || !serversResponse.data?.html) {
       return {
-        success: false,
         status: 502,
         message: 'Failed to fetch Kaido server list',
         data: serversResponse.data || null,
@@ -132,15 +156,7 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'vidcloud', cat
     }
 
     const $ = load(serversResponse.data.html);
-    const serverCandidates = [];
-
-    $(`.servers-${sanitizedCategory} .server-item`).each((_, el) => {
-      const serverName = $(el).find('a').text().toLowerCase().trim();
-      const serverId = Number($(el).attr('data-id') || $(el).attr('data-server-id')) || null;
-      if (serverName && serverId) {
-        serverCandidates.push({ serverName, serverId });
-      }
-    });
+    const serverCandidates = collectServerCandidates($, sanitizedCategory);
 
     if (!serverCandidates.length) {
       $('.server-item').each((_, el) => {
@@ -154,7 +170,6 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'vidcloud', cat
 
     if (!serverCandidates.length) {
       return {
-        success: false,
         status: 404,
         message: 'No streaming servers found on Kaido page',
       };
@@ -191,6 +206,43 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'vidcloud', cat
     }
 
     const m3u8Links = Array.from(collectM3u8Links([sourceResponse.data, rapidSources]));
+    let tracks = normalizeTracks(rapidSources?.tracks);
+    let trackSourceCategory = sanitizedCategory;
+
+    if (!tracks.length && sanitizedCategory === 'dub') {
+      const subServerCandidates = collectServerCandidates($, 'sub');
+      const subServer =
+        subServerCandidates.find((item) => item.serverName.includes(requestedServerName)) ||
+        subServerCandidates[0] ||
+        null;
+
+      if (subServer && subServer.serverId !== selectedServer.serverId) {
+        const subSourceResponse = await axios.get(
+          `${KAIDO_AJAX_URL}/episode/sources?id=${subServer.serverId}`,
+          {
+            headers: {
+              'User-Agent': USER_AGENT,
+              'X-Requested-With': 'XMLHttpRequest',
+              'Referer': watchUrl,
+              ...(cookieHeader ? { 'Cookie': cookieHeader } : {}),
+            },
+            timeout: 15000,
+          }
+        );
+
+        const subRapidSources =
+          subSourceResponse.data?.type === 'iframe' && subSourceResponse.data?.link
+            ? await getRapidCloudSources(subSourceResponse.data.link)
+            : null;
+
+        const fallbackTracks = normalizeTracks(subRapidSources?.tracks);
+        if (fallbackTracks.length) {
+          tracks = fallbackTracks;
+          trackSourceCategory = 'sub';
+          console.log('[getStreamingServer] Tracks fallback: using sub server tracks');
+        }
+      }
+    }
 
     if (m3u8Links.length) {
       console.log('[getStreamingServer] M3U8 URL(s):');
@@ -201,15 +253,41 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'vidcloud', cat
       console.log('[getStreamingServer] No direct .m3u8 URL found in source payload');
     }
 
+    const skip = [];
+    if (rapidSources?.intro?.end > 1) {
+      skip.push({ type: 'intro', start: rapidSources.intro.start, end: rapidSources.intro.end });
+    }
+    if (rapidSources?.outro?.end > 1) {
+      skip.push({ type: 'outro', start: rapidSources.outro.start, end: rapidSources.outro.end });
+    }
+
     return {
-      success: true,
-      data: {
+      status: 200,
+      message: 'Successful',
+      video: {
+        type: 'm3u8',
+        source: {
+          url: m3u8Links[0] || null,
+          urls: m3u8Links,
+          viaProxy: false,
+        },
         watchUrl,
         episodeId: animeEpisodeId,
         episodeNo: Number(ep),
         category: sanitizedCategory,
         server: selectedServer,
-        m3u8: m3u8Links,
+      },
+      captions: {
+        tracks: tracks.map((track) => ({
+          file: track.url,
+          label: track.label,
+          kind: track.kind,
+          default: track.default,
+        })),
+      },
+      skip,
+      trackSourceCategory,
+      raw: {
         source: sourceResponse.data,
         rapidSource: rapidSources,
       },
@@ -217,7 +295,6 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'vidcloud', cat
   } catch (error) {
     console.error('[getStreamingServer] Error fetching from Kaido:', error.message);
     return {
-      success: false,
       status: 500,
       message: 'Failed to fetch streaming server data from Kaido',
       error: error.message,
