@@ -3,6 +3,7 @@ import { USER_AGENT } from '../utils/constants.js';
 
 const ANIWATCH_BASE_URL = 'https://aniwatchtv.to';
 const ANIWATCH_AJAX_URL = `${ANIWATCH_BASE_URL}/ajax/v2`;
+const MEGACLOUD_REFERER = 'https://megacloud.club/';
 
 const SERVER_MAP = {
   'hd-1': 'vidsrc',
@@ -11,7 +12,6 @@ const SERVER_MAP = {
   'vidstreaming': 'vidsrc',
   'vidsrc': 'vidsrc',
   'megacloud': 'megacloud',
-  'mega': 'megacloud',
   'mycloud': 'mycloud',
 };
 
@@ -38,13 +38,13 @@ function collectM3u8Links(value, output = new Set()) {
 const normalizeTracks = (tracks) =>
   Array.isArray(tracks)
     ? tracks
-        .filter((t) => t?.file)
-        .map(({ file, label = null, kind = null, default: def = false }) => ({
-          file,
-          label,
-          kind,
-          default: Boolean(def),
-        }))
+      .filter((t) => t?.file)
+      .map(({ file, label = null, kind = null, default: def = false }) => ({
+        file,
+        label,
+        kind,
+        default: Boolean(def),
+      }))
     : [];
 
 function collectServerCandidates($, category) {
@@ -244,6 +244,7 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'megacloud', ca
       server: { serverName: selectedServer.serverName, serverId: selectedServer.serverId },
       type: m3u8Links.length ? 'm3u8' : (sourceData?.type ?? 'iframe'),
       source: m3u8Links[0] ?? sourceData?.link ?? null,
+      refer: MEGACLOUD_REFERER,
       tracks,
       skip: {
         intro: rapidSources?.intro?.end > 1 ? rapidSources.intro : null,
