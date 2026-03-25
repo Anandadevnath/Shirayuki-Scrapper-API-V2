@@ -1,304 +1,258 @@
 import { load, axios } from '../utils/scrapper-deps.js';
 import { USER_AGENT } from '../utils/constants.js';
 
-const KAIDO_BASE_URL = 'https://kaido.to';
-const KAIDO_AJAX_URL = `${KAIDO_BASE_URL}/ajax`;
+const ANIWATCH_BASE_URL = 'https://aniwatchtv.to';
+const ANIWATCH_AJAX_URL = `${ANIWATCH_BASE_URL}/ajax/v2`;
 
-function normalizeServerName(server = 'vidcloud') {
-  const value = String(server).toLowerCase().trim();
-  const serverMap = {
-    'hd-1': 'vidstreaming',
-    'hd-2': 'vidcloud',
-    'vidcloud': 'vidcloud',
-    'vidstreaming': 'vidstreaming',
-    'mycloud': 'mycloud',
-  };
+const SERVER_MAP = {
+  'hd-1': 'vidsrc',
+  'hd-2': 'megacloud',
+  'vidcloud': 'megacloud',
+  'vidstreaming': 'vidsrc',
+  'vidsrc': 'vidsrc',
+  'megacloud': 'megacloud',
+  'mega': 'megacloud',
+  'mycloud': 'mycloud',
+};
 
-  return serverMap[value] || value;
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const normalizeServerName = (server = 'vidcloud') =>
+  SERVER_MAP[String(server).toLowerCase().trim()] ?? String(server).toLowerCase().trim();
+
+const getIframeIdFromLink = (link) =>
+  (typeof link === 'string' && link.match(/\/e-1\/([^/?]+)/i)?.[1]) || null;
 
 function collectM3u8Links(value, output = new Set()) {
   if (!value) return output;
-
   if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (trimmed.includes('.m3u8')) {
-      output.add(trimmed);
-    }
-    return output;
-  }
-
-  if (Array.isArray(value)) {
+    if (value.trim().includes('.m3u8')) output.add(value.trim());
+  } else if (Array.isArray(value)) {
     value.forEach((item) => collectM3u8Links(item, output));
-    return output;
-  }
-
-  if (typeof value === 'object') {
+  } else if (typeof value === 'object') {
     Object.values(value).forEach((item) => collectM3u8Links(item, output));
   }
-
   return output;
 }
 
-function normalizeTracks(tracks) {
-  if (!Array.isArray(tracks)) return [];
-
-  return tracks
-    .filter((track) => track && typeof track === 'object' && track.file)
-    .map((track) => ({
-      url: track.file,
-      label: track.label || null,
-      kind: track.kind || null,
-      default: Boolean(track.default),
-    }));
-}
-
-function getIframeIdFromLink(link) {
-  if (!link || typeof link !== 'string') return null;
-  const match = link.match(/\/e-1\/([^/?]+)/i);
-  return match?.[1] || null;
-}
+const normalizeTracks = (tracks) =>
+  Array.isArray(tracks)
+    ? tracks
+        .filter((t) => t?.file)
+        .map(({ file, label = null, kind = null, default: def = false }) => ({
+          file,
+          label,
+          kind,
+          default: Boolean(def),
+        }))
+    : [];
 
 function collectServerCandidates($, category) {
-  const serverCandidates = [];
-
+  const candidates = [];
   $(`.servers-${category} .server-item`).each((_, el) => {
     const serverName = $(el).find('a').text().toLowerCase().trim();
     const serverId = Number($(el).attr('data-id') || $(el).attr('data-server-id')) || null;
-    if (serverName && serverId) {
-      serverCandidates.push({ serverName, serverId });
-    }
+    if (serverName && serverId) candidates.push({ serverName, serverId });
   });
-
-  return serverCandidates;
+  return candidates;
 }
 
-async function getRapidCloudSources(iframeLink) {
+// ─── Source Fetchers ──────────────────────────────────────────────────────────
+
+function buildAjaxHeaders(referer, cookieHeader) {
+  return {
+    'User-Agent': USER_AGENT,
+    'X-Requested-With': 'XMLHttpRequest',
+    'Referer': referer,
+    ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+  };
+}
+
+async function fetchSources(iframeLink, fetchFn) {
   const iframeId = getIframeIdFromLink(iframeLink);
   if (!iframeId) return null;
-
   try {
-    const iframeUrl = new URL(iframeLink);
-    const pathMatch = iframeUrl.pathname.match(/\/embed-2\/([^/]+\/)?e-1\//);
-    const versionPath = pathMatch ? pathMatch[0] : '/embed-2/ajax/e-1/';
-
-    const rapidSourcesResponse = await axios.get(
-      `https://${iframeUrl.hostname}${versionPath}getSources?id=${encodeURIComponent(iframeId)}`,
-      {
-        headers: {
-          'User-Agent': USER_AGENT,
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': iframeLink,
-        },
-        timeout: 15000,
-      }
-    );
-
-    return rapidSourcesResponse.data;
+    return await fetchFn(iframeLink, iframeId);
   } catch (error) {
-    console.error('[getStreamingServer] Rapid-cloud source error:', error.message);
+    console.error(`[fetchSources] Error for ${iframeLink}:`, error.message);
     return null;
   }
 }
 
-async function getStreamingServer({ animeEpisodeId, ep, server = 'vidcloud', category = 'sub' }) {
-  if (!animeEpisodeId || ep === undefined || ep === null || ep === '') {
-    console.error('[getStreamingServer] Missing parameters:', { animeEpisodeId, ep, server, category });
-    return {
-      status: 400,
-      message: 'Missing required parameters: animeEpisodeId and ep',
-    };
+async function getRapidCloudSources(iframeLink) {
+  return fetchSources(iframeLink, async (link, id) => {
+    const url = new URL(link);
+    const pathMatch = url.pathname.match(/\/embed-2\/([^/]+\/)?e-1\//);
+    const versionPath = pathMatch?.[0] ?? '/embed-2/ajax/e-1/';
+
+    const { data } = await axios.get(
+      `https://${url.hostname}${versionPath}getSources?id=${encodeURIComponent(id)}`,
+      {
+        headers: { 'User-Agent': USER_AGENT, 'X-Requested-With': 'XMLHttpRequest', Referer: link },
+        timeout: 15000,
+      }
+    );
+    return data;
+  });
+}
+
+async function getMegaCloudSources(iframeLink) {
+  return fetchSources(iframeLink, async (link, id) => {
+    const { data: html } = await axios.get(link, {
+      headers: { 'User-Agent': USER_AGENT, Referer: `${ANIWATCH_BASE_URL}/` },
+      timeout: 15000,
+    });
+
+    const extract = (pattern) => String(html).match(pattern)?.[1] ?? null;
+
+    const clientKey =
+      extract(/window\._xy_ws\s*=\s*['"`]([A-Za-z0-9]+)['"`]/) ||
+      extract(/<meta\s+name=['"]_gg_fb['"]\s+content=['"]([A-Za-z0-9]+)['"]/i) ||
+      extract(/_is_th:([A-Za-z0-9]+)/) ||
+      (() => {
+        const x = extract(/x\s*:\s*['"]([A-Za-z0-9]+)['"]/i);
+        const y = extract(/y\s*:\s*['"]([A-Za-z0-9]+)['"]/i);
+        const z = extract(/z\s*:\s*['"]([A-Za-z0-9]+)['"]/i);
+        return x && y && z ? `${x}${y}${z}` : x ?? y ?? z ?? null;
+      })();
+
+    if (!clientKey) {
+      console.error('[getMegaCloudSources] Client key not found');
+      return null;
+    }
+
+    const url = new URL(link);
+    const pathMatch = url.pathname.match(/\/embed-2\/([^/]+\/)?e-1\//);
+    const versionPath = pathMatch?.[0] ?? '/embed-2/v3/e-1/';
+
+    const { data } = await axios.get(
+      `https://${url.hostname}${versionPath}getSources?id=${encodeURIComponent(id)}&_k=${encodeURIComponent(clientKey)}`,
+      {
+        headers: { 'User-Agent': USER_AGENT, 'X-Requested-With': 'XMLHttpRequest', Referer: link },
+        timeout: 15000,
+      }
+    );
+    return data;
+  });
+}
+
+async function resolveIframeSources(iframeLink) {
+  if (!iframeLink) return null;
+  return iframeLink.includes('megacloud.')
+    ? getMegaCloudSources(iframeLink)
+    : getRapidCloudSources(iframeLink);
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
+async function getStreamingServer({ animeEpisodeId, ep, server = 'megacloud', category = 'sub' }) {
+  if (!animeEpisodeId || ep == null || ep === '') {
+    return { status: 400, message: 'Missing required parameters: animeEpisodeId and ep' };
   }
 
   const sanitizedCategory = String(category).toLowerCase().trim() === 'dub' ? 'dub' : 'sub';
   const requestedServerName = normalizeServerName(server);
-  const watchUrl = `${KAIDO_BASE_URL}/watch/${animeEpisodeId}?ep=${ep}`;
+  const watchUrl = `${ANIWATCH_BASE_URL}/watch/${animeEpisodeId}?ep=${ep}`;
 
-  console.log('[getStreamingServer] Params:', {
-    animeEpisodeId,
-    ep,
-    server: requestedServerName,
-    category: sanitizedCategory,
-  });
-  console.log('[getStreamingServer] Watch URL:', watchUrl);
+  console.log('[getStreamingServer]', { animeEpisodeId, ep, server: requestedServerName, category: sanitizedCategory });
 
   try {
-    const watchResponse = await axios.get(watchUrl, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        'Referer': KAIDO_BASE_URL,
-      },
+    // 1. Grab watch page cookies
+    const { headers } = await axios.get(watchUrl, {
+      headers: { 'User-Agent': USER_AGENT, Referer: ANIWATCH_BASE_URL },
       timeout: 15000,
     });
+    const cookieHeader = (headers?.['set-cookie'] ?? [])
+      .map((c) => c.split(';')[0])
+      .join('; ');
 
-    const rawCookies = watchResponse.headers?.['set-cookie'] || [];
-    const cookieHeader = rawCookies.map((cookie) => cookie.split(';')[0]).join('; ');
-
+    // 2. Fetch server list
     const serversResponse = await axios.get(
-      `${KAIDO_AJAX_URL}/episode/servers?episodeId=${encodeURIComponent(ep)}`,
-      {
-        headers: {
-          'User-Agent': USER_AGENT,
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': watchUrl,
-          ...(cookieHeader ? { 'Cookie': cookieHeader } : {}),
-        },
-        timeout: 15000,
-      }
+      `${ANIWATCH_AJAX_URL}/episode/servers?episodeId=${encodeURIComponent(ep)}`,
+      { headers: buildAjaxHeaders(watchUrl, cookieHeader), timeout: 15000 }
     );
 
     if (!serversResponse.data?.status || !serversResponse.data?.html) {
-      return {
-        status: 502,
-        message: 'Failed to fetch Kaido server list',
-        data: serversResponse.data || null,
-      };
+      return { status: 502, message: 'Failed to fetch Aniwatch server list', data: serversResponse.data ?? null };
     }
 
     const $ = load(serversResponse.data.html);
-    const serverCandidates = collectServerCandidates($, sanitizedCategory);
+    let serverCandidates = collectServerCandidates($, sanitizedCategory);
 
+    // Fallback: collect from any .server-item if category-specific list is empty
     if (!serverCandidates.length) {
       $('.server-item').each((_, el) => {
         const serverName = $(el).find('a').text().toLowerCase().trim();
         const serverId = Number($(el).attr('data-id') || $(el).attr('data-server-id')) || null;
-        if (serverName && serverId) {
-          serverCandidates.push({ serverName, serverId });
-        }
+        if (serverName && serverId) serverCandidates.push({ serverName, serverId });
       });
     }
 
     if (!serverCandidates.length) {
-      return {
-        status: 404,
-        message: 'No streaming servers found on Kaido page',
-      };
+      return { status: 404, message: 'No streaming servers found on Aniwatch page' };
     }
 
     const selectedServer =
-      serverCandidates.find((item) => item.serverName.includes(requestedServerName)) ||
-      serverCandidates[0];
+      serverCandidates.find((s) => s.serverName.includes(requestedServerName)) ?? serverCandidates[0];
 
-    const sourceResponse = await axios.get(
-      `${KAIDO_AJAX_URL}/episode/sources?id=${selectedServer.serverId}`,
-      {
-        headers: {
-          'User-Agent': USER_AGENT,
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': watchUrl,
-          ...(cookieHeader ? { 'Cookie': cookieHeader } : {}),
-        },
-        timeout: 15000,
-      }
+    // 3. Fetch iframe source for selected server
+    const { data: sourceData } = await axios.get(
+      `${ANIWATCH_AJAX_URL}/episode/sources?id=${selectedServer.serverId}`,
+      { headers: buildAjaxHeaders(watchUrl, cookieHeader), timeout: 15000 }
     );
 
-    const rapidSources =
-      sourceResponse.data?.type === 'iframe' && sourceResponse.data?.link
-        ? await getRapidCloudSources(sourceResponse.data.link)
-        : null;
+    const iframeLink = sourceData?.type === 'iframe' ? sourceData.link : null;
+    const rapidSources = await resolveIframeSources(iframeLink);
 
-    if (sourceResponse.data?.type === 'iframe' && sourceResponse.data?.link) {
-      console.log('[getStreamingServer] Iframe source:', sourceResponse.data.link);
-    }
-
-    if (rapidSources) {
-      console.log('[getStreamingServer] Rapid-cloud source payload received');
-    }
-
-    const m3u8Links = Array.from(collectM3u8Links([sourceResponse.data, rapidSources]));
+    // 4. Collect m3u8 links & tracks
+    const m3u8Links = Array.from(collectM3u8Links([sourceData, rapidSources]));
     let tracks = normalizeTracks(rapidSources?.tracks);
-    let trackSourceCategory = sanitizedCategory;
 
+    // 5. Fallback: fetch sub-server tracks for dub when none found
     if (!tracks.length && sanitizedCategory === 'dub') {
-      const subServerCandidates = collectServerCandidates($, 'sub');
-      const subServer =
-        subServerCandidates.find((item) => item.serverName.includes(requestedServerName)) ||
-        subServerCandidates[0] ||
-        null;
+      const subCandidates = collectServerCandidates($, 'sub');
+      const subServer = subCandidates.find((s) => s.serverName.includes(requestedServerName))
+        ?? subCandidates[0]
+        ?? null;
 
       if (subServer && subServer.serverId !== selectedServer.serverId) {
-        const subSourceResponse = await axios.get(
-          `${KAIDO_AJAX_URL}/episode/sources?id=${subServer.serverId}`,
-          {
-            headers: {
-              'User-Agent': USER_AGENT,
-              'X-Requested-With': 'XMLHttpRequest',
-              'Referer': watchUrl,
-              ...(cookieHeader ? { 'Cookie': cookieHeader } : {}),
-            },
-            timeout: 15000,
-          }
+        const { data: subSourceData } = await axios.get(
+          `${ANIWATCH_AJAX_URL}/episode/sources?id=${subServer.serverId}`,
+          { headers: buildAjaxHeaders(watchUrl, cookieHeader), timeout: 15000 }
         );
-
-        const subRapidSources =
-          subSourceResponse.data?.type === 'iframe' && subSourceResponse.data?.link
-            ? await getRapidCloudSources(subSourceResponse.data.link)
-            : null;
-
-        const fallbackTracks = normalizeTracks(subRapidSources?.tracks);
+        const subIframeLink = subSourceData?.type === 'iframe' ? subSourceData.link : null;
+        const subSources = await resolveIframeSources(subIframeLink);
+        const fallbackTracks = normalizeTracks(subSources?.tracks);
         if (fallbackTracks.length) {
           tracks = fallbackTracks;
-          trackSourceCategory = 'sub';
           console.log('[getStreamingServer] Tracks fallback: using sub server tracks');
         }
       }
     }
 
     if (m3u8Links.length) {
-      console.log('[getStreamingServer] M3U8 URL(s):');
-      m3u8Links.forEach((url, index) => {
-        console.log(`  [${index + 1}] ${url}`);
-      });
+      m3u8Links.forEach((url, i) => console.log(`[getStreamingServer] M3U8 [${i + 1}]: ${url}`));
     } else {
       console.log('[getStreamingServer] No direct .m3u8 URL found in source payload');
     }
 
-    const skip = [];
-    if (rapidSources?.intro?.end > 1) {
-      skip.push({ type: 'intro', start: rapidSources.intro.start, end: rapidSources.intro.end });
-    }
-    if (rapidSources?.outro?.end > 1) {
-      skip.push({ type: 'outro', start: rapidSources.outro.start, end: rapidSources.outro.end });
-    }
-
     return {
-      status: 200,
-      message: 'Successful',
-      video: {
-        type: 'm3u8',
-        source: {
-          url: m3u8Links[0] || null,
-          urls: m3u8Links,
-          viaProxy: false,
-        },
-        watchUrl,
-        episodeId: animeEpisodeId,
-        episodeNo: Number(ep),
-        category: sanitizedCategory,
-        server: selectedServer,
-      },
-      captions: {
-        tracks: tracks.map((track) => ({
-          file: track.url,
-          label: track.label,
-          kind: track.kind,
-          default: track.default,
-        })),
-      },
-      skip,
-      trackSourceCategory,
-      raw: {
-        source: sourceResponse.data,
-        rapidSource: rapidSources,
+      watchUrl,
+      episodeId: animeEpisodeId,
+      episodeNo: Number(ep),
+      category: sanitizedCategory,
+      server: { serverName: selectedServer.serverName, serverId: selectedServer.serverId },
+      type: m3u8Links.length ? 'm3u8' : (sourceData?.type ?? 'iframe'),
+      source: m3u8Links[0] ?? sourceData?.link ?? null,
+      tracks,
+      skip: {
+        intro: rapidSources?.intro?.end > 1 ? rapidSources.intro : null,
+        outro: rapidSources?.outro?.end > 1 ? rapidSources.outro : null,
       },
     };
   } catch (error) {
-    console.error('[getStreamingServer] Error fetching from Kaido:', error.message);
-    return {
-      status: 500,
-      message: 'Failed to fetch streaming server data from Kaido',
-      error: error.message,
-    };
+    console.error('[getStreamingServer] Fatal error:', error.message);
+    return { status: 500, message: 'Failed to fetch streaming server data from Aniwatch', error: error.message };
   }
 }
 
