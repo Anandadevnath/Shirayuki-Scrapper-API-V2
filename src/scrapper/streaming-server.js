@@ -6,13 +6,9 @@ const ANIWATCH_AJAX_URL = `${ANIWATCH_BASE_URL}/ajax/v2`;
 const MEGACLOUD_REFERER = 'https://megacloud.club/';
 
 const SERVER_MAP = {
-  'hd-1': 'vidsrc',
-  'hd-2': 'megacloud',
-  'vidcloud': 'megacloud',
-  'vidstreaming': 'vidsrc',
-  'vidsrc': 'vidsrc',
-  'megacloud': 'megacloud',
-  'mycloud': 'mycloud',
+  'hd-1': 'megacloud',
+  'hd-2': 'vidsrc',
+  'hd-3': 'mycloud',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
