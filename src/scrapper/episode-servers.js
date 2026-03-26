@@ -32,18 +32,16 @@ export async function getEpisodeServers(animeEpisodeId) {
 
     res.episodeNo = Number($('.server-notice strong').text().split(' ').pop()) || 0;
 
-    $('.ps_-block.ps_-block-sub.servers-sub .ps__-list .server-item').each((_, el) => {
-      const serverName = $(el).find('a').text().toLowerCase().trim();
+    $('.ps_-block.ps_-block-sub.servers-sub .ps__-list .server-item').each((index, el) => {
       res.sub.push({
-        serverName: serverName,
+        serverName: `hd-${index + 1}`,
         serverId: Number($(el)?.attr('data-server-id')?.trim()) || null,
       });
     });
 
-    $('.ps_-block.ps_-block-sub.servers-dub .ps__-list .server-item').each((_, el) => {
-      const serverName = $(el).find('a').text().toLowerCase().trim();
+    $('.ps_-block.ps_-block-sub.servers-dub .ps__-list .server-item').each((index, el) => {
       res.dub.push({
-        serverName: serverName,
+        serverName: `hd-${index + 1}`,
         serverId: Number($(el)?.attr('data-server-id')?.trim()) || null,
       });
     });
