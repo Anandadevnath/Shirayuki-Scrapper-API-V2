@@ -1,378 +1,330 @@
 # Shirayuki Scrapper API V2
 
-This JavaScript-based scraper is an extended version of the Aniwatch scraper. It adds support for direct embedded streaming URLs for instant playback.
+Anime scraping API powered by Hono. This project exposes a full set of Aniwatch endpoints for discovery, metadata, episodes, server resolution, direct sources, and proxy streaming.
 
-## Features
+## Base URL
 
-- 🏠 Home page data (spotlight, trending, latest episodes)
-- 🔍 Search anime (basic & advanced with filters)
-- 📺 Anime details and episodes
-- 🎬 Episode servers and streaming URLs
-- 📅 Release schedules
-- 🎭 Genre and producer filtering
-- 📊 Category browsing
+```text
+http://localhost:3000/api/v2/hianime
+```
 
-## Contribute
-
-We welcome contributions from the community! To contribute:
-
-1. **Fork** this repository and clone your fork locally.
-2. **Create a new branch** for your feature or bugfix:
-  ```bash
-  git checkout -b your-feature-name
-  ```
-3. **Make your changes** and add tests if applicable.
-4. **Commit** your changes with a clear message:
-  ```bash
-  git commit -m "Add your message here"
-  ```
-5. **Push** to your fork:
-  ```bash
-  git push origin your-feature-name
-  ```
-6. **Open a Pull Request** on GitHub and describe your changes.
-
-Please follow the code style and conventions used in this project. If you have any questions, feel free to open an issue.
-
-## API Endpoints
-
-### Home Page
-
-Get spotlight, trending, latest episodes, top 10, and genres.
+## Quick Start
 
 ```bash
+npm install
+npm run start
+```
+
+## Complete Endpoint Reference
+
+### 2) Home
+
+What it does:
+- Returns home feed data such as spotlight, trending, latest episodes, and top lists.
+
+Endpoint:
+
+```http
 GET /api/v2/hianime/home
 ```
 
-**Example:**
+Example:
+
 ```bash
-curl http://localhost:3000/api/v2/hianime/home
+curl "http://localhost:3000/api/v2/hianime/home"
 ```
 
----
+### 3) A-Z List
 
-### A-Z List
+What it does:
+- Returns anime list by alphabet or numeric range.
 
-Get anime list sorted alphabetically.
+Endpoint:
 
-```bash
+```http
 GET /api/v2/hianime/azlist/:sortOption?page=:page
 ```
 
-**Parameters:**
-- `sortOption`: `all`, `0-9`, `a`, `b`, ... `z`
-- `page`: Page number (default: 1)
+Params:
+- sortOption (path, required): all, 0-9, a-z
+- page (query, optional): default 1
 
-**Example:**
+Example:
+
 ```bash
-curl http://localhost:3000/api/v2/hianime/azlist/a?page=1
+curl "http://localhost:3000/api/v2/hianime/azlist/a?page=1"
 ```
 
----
+### 4) Anime Details
 
-### Anime Details
+What it does:
+- Returns full anime info for a specific anime id.
 
-Get detailed information about a specific anime.
+Endpoint:
 
-```bash
+```http
 GET /api/v2/hianime/anime/:animeId
 ```
 
-**Parameters:**
-- `animeId`: Anime ID (e.g., `steinsgate-3`)
+Params:
+- animeId (path, required): example steinsgate-3
 
-**Example:**
+Example:
+
 ```bash
-curl http://localhost:3000/api/v2/hianime/anime/steinsgate-3
+curl "http://localhost:3000/api/v2/hianime/anime/steinsgate-3"
 ```
 
----
+### 5) Anime Episodes
 
-### Anime Episodes
+What it does:
+- Returns episode list for the selected anime.
 
-Get all episodes for a specific anime.
+Endpoint:
 
-```bash
+```http
 GET /api/v2/hianime/anime/:animeId/episodes
 ```
 
-**Parameters:**
-- `animeId`: Anime ID (e.g., `steinsgate-3`)
+Params:
+- animeId (path, required)
 
-**Example:**
-```bash
-curl http://localhost:3000/api/v2/hianime/anime/steinsgate-3/episodes
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "totalEpisodes": 24,
-    "episodes": [
-      {
-        "title": "Turning Point",
-        "episodeId": "steinsgate-3?ep=213",
-        "number": 1,
-        "isFiller": false,
-        "streaming_url": "https://animefrenzy.cc/ajax/index.php?episodeId=steinsgate-3%3Fep%3D213&server={server}&category={category}"
-      }
-    ]
-  }
-}
-```
-
----
-
-### Episode Servers
-
-Get available servers for streaming an episode.
+Example:
 
 ```bash
-GET /api/v2/hianime/episode/servers?animeEpisodeId=:id
+curl "http://localhost:3000/api/v2/hianime/anime/steinsgate-3/episodes"
 ```
 
-**Parameters:**
-- `animeEpisodeId`: Episode ID (e.g., `steinsgate-3?ep=213`)
+### 6) Next Episode Schedule
 
-**Example:**
-```bash
-curl "http://localhost:3000/api/v2/hianime/episode/servers?animeEpisodeId=steinsgate-3?ep=213"
-```
+What it does:
+- Returns estimated next episode release schedule for an anime.
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "sub": [
-      {
-        "serverName": "hd-1",
-        "serverId": 4,
-        "streaming_url": "https://animefrenzy.cc/ajax/index.php?episodeId=steinsgate-3%3Fep%3D213&server=hd-1&category=sub"
-      },
-      {
-        "serverName": "hd-2",
-        "serverId": 1,
-        "streaming_url": "https://animefrenzy.cc/ajax/index.php?episodeId=steinsgate-3%3Fep%3D213&server=hd-2&category=sub"
-      }
-    ],
-    "dub": [],
-    "raw": [],
-    "episodeId": "steinsgate-3?ep=213",
-    "episodeNo": 1
-  }
-}
-```
+Endpoint:
 
----
-
-### Next Episode Schedule
-
-Get the schedule for the next episode.
-
-```bash
+```http
 GET /api/v2/hianime/anime/:animeId/next-episode-schedule
 ```
 
-**Parameters:**
-- `animeId`: Anime ID (e.g., `one-piece-100`)
+Params:
+- animeId (path, required)
 
-**Example:**
+Example:
+
 ```bash
-curl http://localhost:3000/api/v2/hianime/anime/one-piece-100/next-episode-schedule
+curl "http://localhost:3000/api/v2/hianime/anime/one-piece-100/next-episode-schedule"
 ```
 
----
+### 7) Basic Search
 
-### Basic Search
+What it does:
+- Searches anime by query string.
 
-Search for anime by query.
+Endpoint:
 
-```bash
+```http
 GET /api/v2/hianime/search?q=:query&page=:page
 ```
 
-**Parameters:**
-- `q`: Search query
-- `page`: Page number (default: 1)
+Params:
+- q (query, required)
+- page (query, optional): default 1
 
-**Example:**
+Example:
+
 ```bash
 curl "http://localhost:3000/api/v2/hianime/search?q=titan&page=1"
 ```
 
----
+### 8) Advanced Search
 
-### Advanced Search
+What it does:
+- Searches anime with filters like genres, type, status, rating, season, and sorting.
 
-Search with filters.
+Endpoint:
 
-```bash
+```http
 GET /api/v2/hianime/search/advanced?q=:query&page=:page&genres=:genres&type=:type&status=:status&rated=:rated&score=:score&season=:season&language=:language&start_date=:start_date&end_date=:end_date&sort=:sort
 ```
 
-**Parameters:**
-- `q`: Search query
-- `page`: Page number
-- `genres`: Comma-separated genres (e.g., `action,adventure`)
-- `type`: `movie`, `tv`, `ova`, `ona`, `special`, `music`
-- `status`: `finished-airing`, `currently-airing`, `not-yet-aired`
-- `rated`: `g`, `pg`, `pg-13`, `r`, `r+`, `rx`
-- `score`: `good`, `very-good`, `excellent`
-- `season`: `spring`, `summer`, `fall`, `winter`
-- `language`: `sub`, `dub`
-- `start_date`: Start year (format: `YYYY-0-0`)
-- `end_date`: End year (format: `YYYY-0-0`)
-- `sort`: `default`, `name-az`, `recently-added`, `recently-updated`, `score`, `most-watched`
+Params:
+- q (query, required)
+- page (query, optional)
+- genres, type, status, rated, score, season, language, start_date, end_date, sort (query, optional)
 
-**Example:**
+Example:
+
 ```bash
 curl "http://localhost:3000/api/v2/hianime/search/advanced?q=girls&genres=action,adventure&type=movie&sort=score&season=spring&language=dub&status=finished-airing&rated=pg-13&start_date=2014-0-0&score=good"
 ```
 
----
+### 9) Search Suggestion
 
-### Search Suggestion
+What it does:
+- Returns autocomplete suggestions for a search text.
 
-Get search suggestions for autocomplete.
+Endpoint:
 
-```bash
+```http
 GET /api/v2/hianime/search/suggestion?q=:query
 ```
 
-**Parameters:**
-- `q`: Search query
+Params:
+- q (query, required)
 
-**Example:**
+Example:
+
 ```bash
 curl "http://localhost:3000/api/v2/hianime/search/suggestion?q=titan"
 ```
 
----
+### 10) Producer
 
-### Producer
+What it does:
+- Returns anime list by producer/studio slug.
 
-Get anime by producer/studio.
+Endpoint:
 
-```bash
+```http
 GET /api/v2/hianime/producer/:name?page=:page
 ```
 
-**Parameters:**
-- `name`: Producer name (e.g., `toei-animation`)
-- `page`: Page number (default: 1)
+Params:
+- name (path, required)
+- page (query, optional): default 1
 
-**Example:**
+Example:
+
 ```bash
 curl "http://localhost:3000/api/v2/hianime/producer/toei-animation?page=1"
 ```
 
----
+### 11) Genre
 
-### Genre
+What it does:
+- Returns anime list by genre slug.
 
-Get anime by genre.
+Endpoint:
 
-```bash
+```http
 GET /api/v2/hianime/genre/:name?page=:page
 ```
 
-**Parameters:**
-- `name`: Genre name (e.g., `action`, `adventure`)
-- `page`: Page number (default: 1)
+Params:
+- name (path, required)
+- page (query, optional): default 1
 
-**Example:**
+Example:
+
 ```bash
 curl "http://localhost:3000/api/v2/hianime/genre/action?page=1"
 ```
 
----
+### 12) Category
 
-### Category
+What it does:
+- Returns anime list by category slug (for example most-popular, tv, recently-added).
 
-Browse anime by category.
+Endpoint:
 
-```bash
+```http
 GET /api/v2/hianime/category/:name?page=:page
 ```
 
-**Parameters:**
-- `name`: Category name (e.g., `most-popular`, `recently-updated`, `recently-added`, `top-upcoming`)
-- `page`: Page number (default: 1)
+Params:
+- name (path, required)
+- page (query, optional): default 1
 
-**Example:**
+Example:
+
 ```bash
 curl "http://localhost:3000/api/v2/hianime/category/most-popular?page=1"
 ```
 
----
+### 13) Schedule
 
-### Schedule
+What it does:
+- Returns schedule list for a given date and timezone offset.
 
-Get anime release schedule by date.
+Endpoint:
+
+```http
+GET /api/v2/hianime/schedule?date=:date&tzOffset=:minutes
+```
+
+Params:
+- date (query, required): YYYY-MM-DD
+- tzOffset (query, optional): minutes offset, default -330
+
+Example:
 
 ```bash
-GET /api/v2/hianime/schedule?date=:date
+curl "http://localhost:3000/api/v2/hianime/schedule?date=2024-01-01&tzOffset=-330"
 ```
 
-**Parameters:**
-- `date`: Date in format `YYYY-MM-DD` (e.g., `2024-01-01`)
+### 14) Episode Servers
 
-**Example:**
+What it does:
+- Returns available streaming servers for one episode.
+- Public server labels are normalized as hd-1, hd-2, hd-3.
+
+Endpoint:
+
+```http
+GET /api/v2/hianime/episode/servers?animeEpisodeId=:animeEpisodeId
+```
+
+Params:
+- animeEpisodeId (query, required): example steinsgate-3?ep=213
+
+Example:
+
 ```bash
-curl "http://localhost:3000/api/v2/hianime/schedule?date=2024-01-01"
+curl "http://localhost:3000/api/v2/hianime/episode/servers?animeEpisodeId=steinsgate-3?ep=213"
 ```
 
----
+### 15) Episode Sources
 
-### Streaming Sources (NEW)
+What it does:
+- Resolves the selected server to a direct source URL (m3u8/iframe), subtitles, and intro/outro skip metadata.
 
-Get direct streaming source, captions, and skip info for an episode.
+Endpoint:
+
+```http
+GET /api/v2/hianime/episode/sources?animeEpisodeId=:animeId&ep=:episodeId&server=:server&category=:category
+```
+
+Params:
+- animeEpisodeId (query, required): anime slug, example steinsgate-3
+- ep (query, required): numeric episode id used by hianime, example 230
+- server (query, optional): hd-1, hd-2, hd-3
+- category (query, optional): sub or dub
+
+Example:
 
 ```bash
-GET /api/v2/hianime/episode/sources?animeEpisodeId=:animeEpisodeId&ep=:ep&server=:server&category=:category
+curl "http://localhost:3000/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-2&category=sub"
 ```
 
-**Parameters:**
-- `animeEpisodeId`: Anime episode ID (e.g., `steinsgate-3`)
-- `ep`: Episode number (e.g., `230`)
-- `server`: Server name (e.g., `hd-1`)
-- `category`: `sub` or `dub`
+## Server Alias Mapping
 
-**Example:**
-```bash
-curl "http://localhost:3000/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-1&category=dub"
-```
+- hd-1 -> megacloud
+- hd-2 -> vidsrc
+- hd-3 -> mycloud
 
-**Response:**
-```json
-{
-  "status": 200,
-  "message": "Successful",
-  "video": {
-    "type": "m3u8",
-    "source": {
-      "url": "https://animo-proxy.vercel.app/api/proxy?...",
-      "viaProxy": false
-    }
-  },
-  "captions": {
-    "tracks": [
-      { "file": ".../eng-0.vtt", "label": "English", "kind": "captions", "default": true },
-      { "file": ".../por-2.vtt", "label": "Portuguese", "kind": "captions" },
-      { "file": ".../spa-1.vtt", "label": "Spanish", "kind": "captions" }
-    ]
-  },
-  "skip": [
-    { "start": 642, "end": 728, "name": "Skip Intro" },
-    { "start": 1337, "end": 1426, "name": "Skip Outro" }
-  ]
-}
-```
+## Common Error Responses
 
----
+- 400: Missing required path/query parameters.
+- 404: Route not found.
+- 500: Upstream or internal scraping error.
+
+## Contributing
+
+1. Fork this repository.
+2. Create a feature branch.
+3. Commit focused changes.
+4. Open a pull request.
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
+
+This project is licensed under the MIT License. See LICENSE for details.
