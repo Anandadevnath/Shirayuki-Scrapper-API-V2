@@ -11,10 +11,57 @@ const SERVER_MAP = {
   'hd-3': 'mycloud',
 };
 
+const PUBLIC_SERVER_MAP = Object.fromEntries(
+  Object.entries(SERVER_MAP).map(([publicName, sourceName]) => [sourceName, publicName])
+);
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const normalizeServerName = (server = 'vidcloud') =>
   SERVER_MAP[String(server).toLowerCase().trim()] ?? String(server).toLowerCase().trim();
+
+const toPublicServerName = (serverName = '') =>
+  PUBLIC_SERVER_MAP[String(serverName).toLowerCase().trim()] ?? String(serverName).toLowerCase().trim();
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function isRetryableError(error) {
+  const status = error?.response?.status;
+  const code = error?.code;
+  return (
+    status === 408 ||
+    status === 425 ||
+    status === 429 ||
+    status === 500 ||
+    status === 502 ||
+    status === 503 ||
+    status === 504 ||
+    status === 520 ||
+    code === 'ECONNABORTED' ||
+    code === 'ETIMEDOUT' ||
+    code === 'ECONNRESET' ||
+    code === 'ENOTFOUND'
+  );
+}
+
+async function axiosGetWithRetry(url, config = {}, options = {}) {
+  const retries = Number(options.retries ?? 2);
+  const delayMs = Number(options.delayMs ?? 350);
+
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await axios.get(url, config);
+    } catch (error) {
+      lastError = error;
+      const canRetry = attempt < retries && isRetryableError(error);
+      if (!canRetry) throw error;
+      await sleep(delayMs * (attempt + 1));
+    }
+  }
+
+  throw lastError;
+}
 
 const getIframeIdFromLink = (link) =>
   (typeof link === 'string' && link.match(/\/e-1\/([^/?]+)/i)?.[1]) || null;
@@ -67,12 +114,23 @@ function buildAjaxHeaders(referer, cookieHeader) {
 async function fetchSources(iframeLink, fetchFn) {
   const iframeId = getIframeIdFromLink(iframeLink);
   if (!iframeId) return null;
-  try {
-    return await fetchFn(iframeLink, iframeId);
-  } catch (error) {
-    console.error(`[fetchSources] Error for ${iframeLink}:`, error.message);
-    return null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const data = await fetchFn(iframeLink, iframeId);
+      if (data) return data;
+    } catch (error) {
+      if (attempt === 2) {
+        console.error(`[fetchSources] Error for ${iframeLink}:`, error.message);
+      }
+    }
+
+    if (attempt < 2) {
+      await sleep(250 * (attempt + 1));
+    }
   }
+
+  return null;
 }
 
 async function getRapidCloudSources(iframeLink) {
@@ -81,12 +139,13 @@ async function getRapidCloudSources(iframeLink) {
     const pathMatch = url.pathname.match(/\/embed-2\/([^/]+\/)?e-1\//);
     const versionPath = pathMatch?.[0] ?? '/embed-2/ajax/e-1/';
 
-    const { data } = await axios.get(
+    const { data } = await axiosGetWithRetry(
       `https://${url.hostname}${versionPath}getSources?id=${encodeURIComponent(id)}`,
       {
         headers: { 'User-Agent': USER_AGENT, 'X-Requested-With': 'XMLHttpRequest', Referer: link },
         timeout: 15000,
-      }
+      },
+      { retries: 2, delayMs: 350 }
     );
     return data;
   });
@@ -94,10 +153,10 @@ async function getRapidCloudSources(iframeLink) {
 
 async function getMegaCloudSources(iframeLink) {
   return fetchSources(iframeLink, async (link, id) => {
-    const { data: html } = await axios.get(link, {
+    const { data: html } = await axiosGetWithRetry(link, {
       headers: { 'User-Agent': USER_AGENT, Referer: `${ANIWATCH_BASE_URL}/` },
       timeout: 15000,
-    });
+    }, { retries: 2, delayMs: 350 });
 
     const extract = (pattern) => String(html).match(pattern)?.[1] ?? null;
 
@@ -121,12 +180,13 @@ async function getMegaCloudSources(iframeLink) {
     const pathMatch = url.pathname.match(/\/embed-2\/([^/]+\/)?e-1\//);
     const versionPath = pathMatch?.[0] ?? '/embed-2/v3/e-1/';
 
-    const { data } = await axios.get(
+    const { data } = await axiosGetWithRetry(
       `https://${url.hostname}${versionPath}getSources?id=${encodeURIComponent(id)}&_k=${encodeURIComponent(clientKey)}`,
       {
         headers: { 'User-Agent': USER_AGENT, 'X-Requested-With': 'XMLHttpRequest', Referer: link },
         timeout: 15000,
-      }
+      },
+      { retries: 2, delayMs: 350 }
     );
     return data;
   });
@@ -154,18 +214,19 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'megacloud', ca
 
   try {
     // 1. Grab watch page cookies
-    const { headers } = await axios.get(watchUrl, {
+    const { headers } = await axiosGetWithRetry(watchUrl, {
       headers: { 'User-Agent': USER_AGENT, Referer: ANIWATCH_BASE_URL },
       timeout: 15000,
-    });
+    }, { retries: 2, delayMs: 400 });
     const cookieHeader = (headers?.['set-cookie'] ?? [])
       .map((c) => c.split(';')[0])
       .join('; ');
 
     // 2. Fetch server list
-    const serversResponse = await axios.get(
+    const serversResponse = await axiosGetWithRetry(
       `${ANIWATCH_AJAX_URL}/episode/servers?episodeId=${encodeURIComponent(ep)}`,
-      { headers: buildAjaxHeaders(watchUrl, cookieHeader), timeout: 15000 }
+      { headers: buildAjaxHeaders(watchUrl, cookieHeader), timeout: 15000 },
+      { retries: 2, delayMs: 400 }
     );
 
     if (!serversResponse.data?.status || !serversResponse.data?.html) {
@@ -192,9 +253,10 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'megacloud', ca
       serverCandidates.find((s) => s.serverName.includes(requestedServerName)) ?? serverCandidates[0];
 
     // 3. Fetch iframe source for selected server
-    const { data: sourceData } = await axios.get(
+    const { data: sourceData } = await axiosGetWithRetry(
       `${ANIWATCH_AJAX_URL}/episode/sources?id=${selectedServer.serverId}`,
-      { headers: buildAjaxHeaders(watchUrl, cookieHeader), timeout: 15000 }
+      { headers: buildAjaxHeaders(watchUrl, cookieHeader), timeout: 15000 },
+      { retries: 2, delayMs: 400 }
     );
 
     const iframeLink = sourceData?.type === 'iframe' ? sourceData.link : null;
@@ -212,9 +274,10 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'megacloud', ca
         ?? null;
 
       if (subServer && subServer.serverId !== selectedServer.serverId) {
-        const { data: subSourceData } = await axios.get(
+        const { data: subSourceData } = await axiosGetWithRetry(
           `${ANIWATCH_AJAX_URL}/episode/sources?id=${subServer.serverId}`,
-          { headers: buildAjaxHeaders(watchUrl, cookieHeader), timeout: 15000 }
+          { headers: buildAjaxHeaders(watchUrl, cookieHeader), timeout: 15000 },
+          { retries: 2, delayMs: 400 }
         );
         const subIframeLink = subSourceData?.type === 'iframe' ? subSourceData.link : null;
         const subSources = await resolveIframeSources(subIframeLink);
@@ -237,7 +300,7 @@ async function getStreamingServer({ animeEpisodeId, ep, server = 'megacloud', ca
       episodeId: animeEpisodeId,
       episodeNo: Number(ep),
       category: sanitizedCategory,
-      server: { serverName: selectedServer.serverName, serverId: selectedServer.serverId },
+      server: { serverName: toPublicServerName(selectedServer.serverName), serverId: selectedServer.serverId },
       type: m3u8Links.length ? 'm3u8' : (sourceData?.type ?? 'iframe'),
       source: m3u8Links[0] ?? sourceData?.link ?? null,
       refer: MEGACLOUD_REFERER,
