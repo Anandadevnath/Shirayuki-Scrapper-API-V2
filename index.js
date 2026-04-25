@@ -18,6 +18,22 @@ import nextEpisodeRouter from './src/router/next-episode.js';
 import episodeServersRouter from './src/router/episode-servers.js';
 import hianimeEpisodeSourcesRouter from './src/router/streaming-server.js';
 import proxyRouter from './src/router/proxy.js';
+import animekaiHomeRouter from './src/animekai/router/home.js';
+import animekaiAzlistRouter from './src/animekai/router/azlist.js';
+import animekaiAnimeRouter from './src/animekai/router/anime.js';
+import animekaiSearchRouter from './src/animekai/router/search.js';
+import animekaiSearchAdvancedRouter from './src/animekai/router/search-advanced.js';
+import animekaiSearchSuggestionRouter from './src/animekai/router/search-suggestion.js';
+import animekaiProducerRouter from './src/animekai/router/producer.js';
+import animekaiGenreRouter from './src/animekai/router/genre.js';
+import animekaiCategoryRouter from './src/animekai/router/category.js';
+import animekaiScheduleRouter from './src/animekai/router/schedule.js';
+import animekaiEpisodesRouter from './src/animekai/router/episodes.js';
+import animekaiNextEpisodeRouter from './src/animekai/router/next-episode.js';
+import animekaiEpisodeServersRouter from './src/animekai/router/episode-servers.js';
+import animekaiEpisodeSourcesRouter from './src/animekai/router/streaming-server.js';
+import animekaiProxyRouter from './src/animekai/router/proxy.js';
+import { animekaiEpisodesController } from './src/animekai/controllers/episodes.js';
 
 const app = new Hono();
 
@@ -44,6 +60,21 @@ app.get('/', (c) => {
       schedule: '/api/v2/hianime/schedule?date=2024-01-01',
       episodeServers: '/api/v2/hianime/episode/servers?animeEpisodeId=steinsgate-3?ep=213',
       episodeSources: '/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-2&category=sub',
+      animekaiHome: '/api/v2/animekai/home',
+      animekaiAzlist: '/api/v2/animekai/azlist/0-9?page=1',
+      animekaiDetails: '/api/v2/animekai/anime/one-piece-dk6r',
+      animekaiEpisodes: '/api/v2/animekai/anime/one-piece-dk6r/episodes',
+      animekaiEpisodesCompat: '/api/v2/animekai/one-piece-dk6r/episodes',
+      animekaiSearch: '/api/v2/animekai/search?q=one%20piece&page=1',
+      animekaiSearchAdvanced: '/api/v2/animekai/search/advanced?q=one%20piece&page=1',
+      animekaiSearchSuggestion: '/api/v2/animekai/search/suggestion?q=one',
+      animekaiProducer: '/api/v2/animekai/producer/toei-animation?page=1',
+      animekaiGenre: '/api/v2/animekai/genre/action?page=1',
+      animekaiCategory: '/api/v2/animekai/category/tv?page=1',
+      animekaiSchedule: '/api/v2/animekai/schedule?date=2026-01-01',
+      animekaiEpisodeServers: '/api/v2/animekai/episode/servers?animeEpisodeId=example',
+      animekaiEpisodeSources:
+        '/api/v2/animekai/episode/sources?animeEpisodeId=example&ep=1&server=hd-1&category=sub',
     }
   });
 });
@@ -65,6 +96,25 @@ app.route('/api/v2/hianime/anime', nextEpisodeRouter);
 app.route('/api/v2/hianime/episode', episodeServersRouter);
 app.route('/api/v2/hianime/episode/sources', hianimeEpisodeSourcesRouter);
 app.route('/api/v2/hianime/proxy', proxyRouter);
+app.route('/api/v2/animekai/home', animekaiHomeRouter);
+app.route('/api/v2/animekai/azlist', animekaiAzlistRouter);
+app.route('/api/v2/animekai/anime', animekaiAnimeRouter);
+app.route('/api/v2/animekai/search', animekaiSearchRouter);
+app.route('/api/v2/animekai/search/advanced', animekaiSearchAdvancedRouter);
+app.route('/api/v2/animekai/search/suggestion', animekaiSearchSuggestionRouter);
+app.route('/api/v2/animekai/producer', animekaiProducerRouter);
+app.route('/api/v2/animekai/genre', animekaiGenreRouter);
+app.route('/api/v2/animekai/category', animekaiCategoryRouter);
+app.route('/api/v2/animekai/schedule', animekaiScheduleRouter);
+app.route('/api/v2/animekai/anime', animekaiEpisodesRouter);
+app.route('/api/v2/animekai/anime', animekaiNextEpisodeRouter);
+
+app.route('/api/v2/animekai/episode', animekaiEpisodeServersRouter);
+app.route('/api/v2/animekai/episode/sources', animekaiEpisodeSourcesRouter);
+app.route('/api/v2/animekai/proxy', animekaiProxyRouter);
+
+// Compatibility alias: supports /api/v2/animekai/:animeId/episodes format.
+app.get('/api/v2/animekai/:animeId/episodes', animekaiEpisodesController);
 
 app.notFound((c) => {
   return c.json({
