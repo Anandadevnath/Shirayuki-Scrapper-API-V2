@@ -277,6 +277,92 @@ function findEpisodeToken($, episodeNumber, category) {
   return ep.token;
 }
 
+function parseSubtitleTracksFromM3u8(m3u8Content, m3u8Url) {
+  const tracks = [];
+  if (!m3u8Content || typeof m3u8Content !== 'string') return tracks;
+
+  // Get base URL for resolving relative paths
+  const baseUrl = m3u8Url.substring(0, m3u8Url.lastIndexOf('/') + 1);
+
+  // Parse EXT-X-MEDIA lines with TYPE=SUBTITLES
+  const mediaRegex = /#EXT-X-MEDIA:TYPE=SUBTITLES[^,\n]*(?:,[^,\n]*)*/g;
+  const matches = m3u8Content.match(mediaRegex) || [];
+
+  for (const match of matches) {
+    const groupIdMatch = match.match(/GROUP-ID="([^"]+)"/);
+    const nameMatch = match.match(/NAME="([^"]+)"/);
+    const langMatch = match.match(/LANGUAGE="([^"]+)"/);
+    const uriMatch = match.match(/URI="([^"]+)"/);
+    const defaultMatch = match.match(/DEFAULT=([^,\s]+)/);
+    const forcedMatch = match.match(/FORCED=([^,\s]+)/);
+
+    if (uriMatch) {
+      let fileUrl = uriMatch[1];
+      
+      // Make relative URLs absolute
+      if (fileUrl.startsWith('//')) {
+        fileUrl = 'https:' + fileUrl;
+      } else if (fileUrl.startsWith('/')) {
+        const urlObj = new URL(m3u8Url);
+        fileUrl = `${urlObj.origin}${fileUrl}`;
+      } else if (!fileUrl.startsWith('http')) {
+        fileUrl = baseUrl + fileUrl;
+      }
+
+      tracks.push({
+        file: fileUrl,
+        label: nameMatch ? nameMatch[1] : 'Unknown',
+        kind: 'subtitle',
+        default: defaultMatch ? defaultMatch[1] === 'YES' : false,
+        forced: forcedMatch ? forcedMatch[1] === 'YES' : false,
+      });
+    }
+  }
+
+  return tracks;
+}
+
+function normalizeTracks(tracks) {
+  if (!Array.isArray(tracks)) return [];
+
+  const seen = new Set();
+  const normalized = [];
+
+  for (const t of tracks) {
+    const file = t?.file || t?.src || t?.url || null;
+    if (!file || typeof file !== 'string') continue;
+
+    const label = typeof t?.label === 'string' && t.label.trim() ? t.label.trim() : 'Unknown';
+    const kind = typeof t?.kind === 'string' && t.kind.trim()
+      ? t.kind.trim()
+      : (typeof t?.type === 'string' && t.type.trim() ? t.type.trim() : 'captions');
+    const def = Boolean(t?.default ?? t?.isDefault ?? false);
+    const forced = Boolean(t?.forced ?? false);
+
+    const key = `${file}|${label}|${kind}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    normalized.push({ file, label, kind, default: def, forced });
+  }
+
+  return normalized;
+}
+
+function extractTracksFromMediaData(mediaData) {
+  const candidates = [];
+
+  if (Array.isArray(mediaData?.tracks)) candidates.push(...mediaData.tracks);
+  if (Array.isArray(mediaData?.subtitles)) candidates.push(...mediaData.subtitles);
+  if (Array.isArray(mediaData?.captions)) candidates.push(...mediaData.captions);
+  if (mediaData?.track) {
+    if (Array.isArray(mediaData.track)) candidates.push(...mediaData.track);
+    else candidates.push(mediaData.track);
+  }
+
+  return normalizeTracks(candidates);
+}
+
 export const getAnimekaiEpisodeSources = async ({ animeEpisodeId, ep, server, category }) => {
   const animeId = normalizeAnimeId(animeEpisodeId);
 
@@ -395,6 +481,96 @@ export const getAnimekaiEpisodeSources = async ({ animeEpisodeId, ep, server, ca
   let m3u8 = null;
   let tracks = [];
 
+  const resolveTracksForCategory = async (targetCategory) => {
+    try {
+      const altToken = findEpisodeToken($episodes, episodeNumber, targetCategory);
+      if (!altToken) return [];
+
+      const altServersEnc = await encKai(altToken);
+      const altServersResp = await axios.get(ANIMEKAI_SERVERS_URL, {
+        proxy: false,
+        timeout: 15000,
+        headers: {
+          ...ajaxHeaders,
+          Referer: watchUrl,
+        },
+        params: { token: altToken, _: altServersEnc },
+      });
+
+      const altServersHtml = altServersResp?.data?.result ?? '';
+      if (!altServersHtml) return [];
+
+      const $altServers = load(String(altServersHtml));
+      const altPicked = pickServerFromList($altServers, targetCategory, normalizedServer);
+      if (!altPicked?.linkId) return [];
+
+      const altLinkEnc = await encKai(altPicked.linkId);
+      const altViewResp = await axios.get(ANIMEKAI_LINKS_VIEW_URL, {
+        proxy: false,
+        timeout: 15000,
+        headers: {
+          ...ajaxHeaders,
+          Referer: watchUrl,
+        },
+        params: { id: altPicked.linkId, _: altLinkEnc },
+      });
+
+      const altEncryptedEmbed = altViewResp?.data?.result ?? '';
+      if (!altEncryptedEmbed) return [];
+
+      const altEmbedData = await decKai(altEncryptedEmbed);
+      const altEmbedUrl = altEmbedData?.url ? String(altEmbedData.url) : null;
+      if (!altEmbedUrl) return [];
+
+      const altVideoId = altEmbedUrl.replace(/\/+$/, '').split('/').pop();
+      const altEmbedBase = altEmbedUrl.includes('/e/')
+        ? altEmbedUrl.split('/e/')[0]
+        : altEmbedUrl.substring(0, altEmbedUrl.lastIndexOf('/'));
+      const altMediaUrl = `${altEmbedBase}/media/${altVideoId}`;
+
+      const altMediaResp = await axios.get(altMediaUrl, {
+        proxy: false,
+        timeout: 15000,
+        headers: {
+          'User-Agent': DEFAULT_UA,
+          'X-Requested-With': 'XMLHttpRequest',
+          Referer: altEmbedUrl,
+        },
+      });
+
+      const altEncryptedMedia = altMediaResp?.data?.result ?? '';
+      if (!altEncryptedMedia || typeof altEncryptedMedia !== 'string') return [];
+
+      const altMediaData = await decMega(altEncryptedMedia);
+      const mediaTracks = extractTracksFromMediaData(altMediaData);
+      if (mediaTracks.length) return mediaTracks;
+
+      const altM3u8 =
+        (Array.isArray(altMediaData?.sources)
+          ? altMediaData.sources.find((s) => typeof s?.file === 'string' && s.file.includes('.m3u8'))?.file
+          : null)
+        ?? (typeof altMediaData?.file === 'string' && altMediaData.file.includes('.m3u8') ? altMediaData.file : null)
+        ?? (typeof altMediaData?.url === 'string' && altMediaData.url.includes('.m3u8') ? altMediaData.url : null)
+        ?? (typeof altMediaData?.source === 'string' && altMediaData.source.includes('.m3u8') ? altMediaData.source : null);
+
+      if (!altM3u8) return [];
+
+      const altM3u8Resp = await axios.get(altM3u8, {
+        proxy: false,
+        timeout: 15000,
+        headers: {
+          'User-Agent': DEFAULT_UA,
+          Referer: altEmbedUrl,
+        },
+      });
+
+      return normalizeTracks(parseSubtitleTracksFromM3u8(altM3u8Resp?.data || '', altM3u8));
+    } catch (err) {
+      console.log('[getAnimekaiEpisodeSources] Alternate category track fetch failed:', err.message);
+      return [];
+    }
+  };
+
   try {
     const mediaUrl = `${embedBase}/media/${videoId}`;
     console.log('[getAnimekaiEpisodeSources] Fetching media from:', mediaUrl);
@@ -442,23 +618,94 @@ export const getAnimekaiEpisodeSources = async ({ animeEpisodeId, ep, server, ca
     if (encryptedMedia && typeof encryptedMedia === 'string' && encryptedMedia.length > 0) {
       // 8. Decrypt the media to get m3u8 sources
       const mediaData = await decMega(encryptedMedia);
-      console.log('[getAnimekaiEpisodeSources] Decrypted media data:', JSON.stringify(mediaData)?.slice(0, 200));
+      console.log('[getAnimekaiEpisodeSources] Full decrypted media data:', JSON.stringify(mediaData, null, 2));
 
       if (mediaData) {
-        const sources = Array.isArray(mediaData?.sources) ? mediaData.sources : [];
-        
-        // Find m3u8 in sources
-        m3u8 =
-          sources.find((s) => typeof s?.file === 'string' && s.file.includes('.m3u8'))?.file ??
-          sources.find((s) => typeof s?.url === 'string' && s.url.includes('.m3u8'))?.url ??
-          null;
+        tracks = extractTracksFromMediaData(mediaData);
 
-        if (mediaData?.tracks) {
-          tracks = Array.isArray(mediaData.tracks) ? mediaData.tracks : [];
+        if (!tracks.length && normalizedCategory === 'sub') {
+          const fallbackTracks = await resolveTracksForCategory('dub');
+          if (fallbackTracks.length) {
+            console.log('[getAnimekaiEpisodeSources] Using dub category tracks as fallback for sub request.');
+            tracks = fallbackTracks;
+          }
         }
 
+        // Try to find m3u8 in various places
+        m3u8 = null;
+        
+        // Check sources array
+        if (mediaData?.sources) {
+          const sources = Array.isArray(mediaData.sources) ? mediaData.sources : [];
+          m3u8 = sources.find((s) => typeof s?.file === 'string' && s.file.includes('.m3u8'))?.file
+            ?? sources.find((s) => typeof s?.url === 'string' && s.url.includes('.m3u8'))?.url
+            ?? null;
+        }
+        
+        // Try mediaData.file directly
+        if (!m3u8 && mediaData?.file?.includes?.('.m3u8')) {
+          m3u8 = mediaData.file;
+        }
+        
+        // Try mediaData.url directly
+        if (!m3u8 && mediaData?.url?.includes?.('.m3u8')) {
+          m3u8 = mediaData.url;
+        }
+        
+        // Try mediaData.source directly
+        if (!m3u8 && typeof mediaData?.source === 'string' && mediaData.source.includes('.m3u8')) {
+          m3u8 = mediaData.source;
+        }
+
+        console.log('[getAnimekaiEpisodeSources] m3u8:', m3u8);
+        
+        // If m3u8 found and tracks are still empty, fetch it and parse subtitle tracks.
         if (m3u8) {
-          console.log('[getAnimekaiEpisodeSources] Found m3u8:', m3u8);
+          if (!tracks.length) {
+            try {
+              const m3u8Resp = await axios.get(m3u8, {
+                proxy: false,
+                timeout: 12000,
+                headers: {
+                  'User-Agent': DEFAULT_UA,
+                  Referer: embedUrl,
+                },
+              });
+              
+              const m3u8Content = m3u8Resp?.data || '';
+              console.log('[getAnimekaiEpisodeSources] Parsing m3u8 content for tracks...');
+              
+              // Parse m3u8 for subtitle tracks (EXT-X-MEDIA with TYPE=SUBTITLES)
+              const m3u8Tracks = normalizeTracks(parseSubtitleTracksFromM3u8(m3u8Content, m3u8));
+              if (m3u8Tracks.length) {
+                tracks = m3u8Tracks;
+              }
+              console.log('[getAnimekaiEpisodeSources] Parsed tracks:', JSON.stringify(tracks));
+            } catch (m3u8Error) {
+              console.log('[getAnimekaiEpisodeSources] Failed to fetch/parse m3u8:', m3u8Error.message);
+            }
+          }
+          
+          return {
+            animeId,
+            title,
+            episode: episodeNumber,
+            sourcePage: url,
+            sources: [
+              {
+                source: m3u8,
+                type: 'm3u8',
+                quality: null,
+                referer: embedUrl,
+                server: normalizedServer,
+                category: normalizedCategory,
+                embed: embedUrl,
+              },
+            ],
+            tracks,
+            intro: embedData?.skip?.intro ?? null,
+            outro: embedData?.skip?.outro ?? null,
+          };
         }
       }
     }
@@ -487,12 +734,21 @@ export const getAnimekaiEpisodeSources = async ({ animeEpisodeId, ep, server, ca
       tracks,
       intro: embedData?.skip?.intro ?? null,
       outro: embedData?.skip?.outro ?? null,
-      note: 'Resolved via AnimeKai ajax endpoints + enc-dec bridge.',
     };
   }
 
   // Fallback: return embed URL as iframe source
   console.log('[getAnimekaiEpisodeSources] No m3u8 found, returning embed URL');
+  
+  // Try to get tracks from embedData if available
+  let fallbackTracks = [];
+  if (embedData?.tracks) {
+    fallbackTracks = Array.isArray(embedData.tracks) ? embedData.tracks : [];
+  } else if (embedData?.track) {
+    fallbackTracks = Array.isArray(embedData.track) ? embedData.track : [embedData.track].filter(Boolean);
+  }
+  
+  console.log('[getAnimekaiEpisodeSources] Fallback tracks from embedData:', JSON.stringify(fallbackTracks));
   
   return {
     animeId,
@@ -510,13 +766,8 @@ export const getAnimekaiEpisodeSources = async ({ animeEpisodeId, ep, server, ca
         embed: embedUrl,
       },
     ],
-    tracks: [],
+    tracks: normalizeTracks(fallbackTracks),
     intro: embedData?.skip?.intro ?? null,
     outro: embedData?.skip?.outro ?? null,
-    note: 'Could not resolve m3u8. Embed URL returned for manual resolution.',
-    warnings: [
-      'Could not find direct m3u8 link.',
-      'Use the embed URL in a video player that supports iframe sources.',
-    ],
   };
 };

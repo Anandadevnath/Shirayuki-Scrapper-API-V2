@@ -17,18 +17,14 @@ export const animekaiEpisodeSourcesController = async (c) => {
       );
     }
 
+    const startTime = Date.now();
     const data = await getAnimekaiEpisodeSources({ animeEpisodeId, ep, server, category });
-    const warnings = [];
-    if (!ep || !server || !category) {
-      warnings.push(
-        'If you are calling this endpoint from a browser, remember that anything after `#` is a URL fragment and is NOT sent to the server. Use query params like `&ep=1&server=server-1&category=sub` (not `#ep=1...`).'
-      );
-    }
+    const extractionTimeSec = Number(((Date.now() - startTime) / 1000).toFixed(3));
 
     return c.json({
       success: true,
       data,
-      ...(warnings.length ? { warnings } : {}),
+      extractionTimeSec,
     });
   } catch (error) {
     return c.json(
