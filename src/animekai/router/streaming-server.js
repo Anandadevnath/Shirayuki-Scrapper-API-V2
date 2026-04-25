@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import { animekaiNotImplementedController } from '../controllers/_not-implemented.js';
+import { animekaiEpisodeSourcesController } from '../controllers/episode-sources.js';
 
 const animekaiEpisodeSourcesRouter = new Hono();
 
-animekaiEpisodeSourcesRouter.get('/', animekaiNotImplementedController('episode-sources'));
+animekaiEpisodeSourcesRouter.get('/', animekaiEpisodeSourcesController);
 
 export default animekaiEpisodeSourcesRouter;
