@@ -74,7 +74,7 @@ app.get('/', (c) => {
       animekaiSchedule: '/api/v2/animekai/schedule?date=2026-01-01',
       animekaiEpisodeServers: '/api/v2/animekai/episode/servers?animeEpisodeId=example',
       animekaiEpisodeSources:
-        '/api/v2/animekai/episode/sources?animeEpisodeId=example&ep=1&server=hd-1&category=sub',
+        '/api/v2/animekai/episode/sources?animeEpisodeId=witch-hat-atelier-3e32&ep=1&server=server-1&category=sub',
     }
   });
 });

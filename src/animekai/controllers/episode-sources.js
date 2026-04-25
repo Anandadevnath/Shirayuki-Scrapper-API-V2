@@ -18,9 +18,17 @@ export const animekaiEpisodeSourcesController = async (c) => {
     }
 
     const data = await getAnimekaiEpisodeSources({ animeEpisodeId, ep, server, category });
+    const warnings = [];
+    if (!ep || !server || !category) {
+      warnings.push(
+        'If you are calling this endpoint from a browser, remember that anything after `#` is a URL fragment and is NOT sent to the server. Use query params like `&ep=1&server=server-1&category=sub` (not `#ep=1...`).'
+      );
+    }
+
     return c.json({
       success: true,
       data,
+      ...(warnings.length ? { warnings } : {}),
     });
   } catch (error) {
     return c.json(

@@ -8,6 +8,12 @@ Anime scraping API powered by Hono. This project exposes a full set of Aniwatch 
 http://localhost:3000/api/v2/hianime
 ```
 
+## AnimeKai Base URL
+
+```text
+http://localhost:3000/api/v2/animekai
+```
+
 ## Quick Start
 
 ```bash
@@ -275,7 +281,7 @@ GET /api/v2/hianime/episode/servers?animeEpisodeId=:animeEpisodeId
 ```
 
 Params:
-- animeEpisodeId (query, required): example steinsgate-3?ep=213
+- animeEpisodeId (query, required): anime id and episode query, example steinsgate-3?ep=213
 
 Example:
 
@@ -305,6 +311,48 @@ Example:
 ```bash
 curl "http://localhost:3000/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-2&category=sub"
 ```
+
+## AnimeKai Endpoints
+
+### 1) Episode Servers (AnimeKai)
+
+Endpoint:
+
+```http
+GET /api/v2/animekai/episode/servers?animeEpisodeId=:animeEpisodeId
+```
+
+Example:
+
+```bash
+curl "http://localhost:3000/api/v2/animekai/episode/servers?animeEpisodeId=witch-hat-atelier-3e32"
+```
+
+### 2) Episode Sources (AnimeKai)
+
+What it does:
+- AnimeKai source AJAX uses dynamic request signatures, so this endpoint returns a fallback “watch page” source object.
+
+Endpoint:
+
+```http
+GET /api/v2/animekai/episode/sources?animeEpisodeId=:animeEpisodeId&ep=:ep&server=:server&category=:category
+```
+
+Params:
+- animeEpisodeId (query, required): AnimeKai anime id, example witch-hat-atelier-3e32
+- ep (query, optional): episode number, default 1
+- server (query, optional): server-1 or server-2, default server-1
+- category (query, optional): sub, dub, or softsub, default sub
+
+Example:
+
+```bash
+curl "http://localhost:3000/api/v2/animekai/episode/sources?animeEpisodeId=witch-hat-atelier-3e32&ep=1&server=server-1&category=sub"
+```
+
+Important:
+- When testing in a browser, **do not** put query params after `#` (fragments are not sent to the server). Use `&ep=1&server=...&category=...`.
 
 ## Server Alias Mapping
 
