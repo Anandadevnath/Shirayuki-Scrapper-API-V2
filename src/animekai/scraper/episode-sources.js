@@ -1,7 +1,18 @@
 import { fetchAnimekaiPage } from './_shared.js';
 import { axios } from '../../utils/scrapper-deps.js';
+import cloudscraper from 'cloudscraper';
 
 const ANIMEKAI_BASE_URL = 'https://anikai.to';
+
+// Detect serverless environment (Vercel, AWS Lambda, etc.)
+const isServerless = Boolean(
+  process.env.VERCEL ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.NETLIFY ||
+  process.env.CF_PAGES ||
+  process.env.RENDER ||
+  process.env.RAILWAY
+);
 const ANIMEKAI_EPISODES_URL = `${ANIMEKAI_BASE_URL}/ajax/episodes/list`;
 const ANIMEKAI_SERVERS_URL = `${ANIMEKAI_BASE_URL}/ajax/links/list`;
 const ANIMEKAI_LINKS_VIEW_URL = `${ANIMEKAI_BASE_URL}/ajax/links/view`;
@@ -41,6 +52,48 @@ async function getBrowser() {
 }
 
 async function fetchMediaWithPuppeteer(mediaUrl, referer) {
+  // In serverless environments, use cloudscraper as fallback
+  // Puppeteer requires Chrome binary which is not available in serverless functions
+  if (isServerless) {
+    console.log('[fetchMediaWithPuppeteer] Using cloudscraper in serverless environment');
+    try {
+      const result = await cloudscraper({
+        url: mediaUrl,
+        headers: {
+          'User-Agent': DEFAULT_UA,
+          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': referer,
+        },
+        timeout: 15000,
+        challengeTimeout: 20000,
+      });
+      
+      // cloudscraper returns the body content directly
+      // Try to extract JSON result from the response
+      if (typeof result === 'string') {
+        // Try to find JSON with result property in the response
+        const jsonMatch = result.match(/\{[\s\S]*?"result"[\s\S]*?\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]);
+            return parsed.result || parsed;
+          } catch {}
+        }
+      }
+      
+      // If cloudscraper returned parsed JSON already
+      if (result && typeof result === 'object' && result.result) {
+        return result.result;
+      }
+      
+      console.log('[fetchMediaWithPuppeteer] cloudscraper returned no usable result');
+      return null;
+    } catch (cloudscraperError) {
+      console.error('[fetchMediaWithPuppeteer] cloudscraper failed:', cloudscraperError.message);
+      return null;
+    }
+  }
+
   let browser = null;
   let page = null;
   try {
