@@ -46,36 +46,60 @@ app.get('/', (c) => {
   return c.json({
     message: 'Shirayuki Scrapper API V2',
     version: '2.0.0',
-    Endpoints: {
-      home: '/api/v2/hianime/home',
-      azlist: '/api/v2/hianime/azlist/0-9?page=1',
-      animeDetails: '/api/v2/hianime/anime/attack-on-titan-112',
-      animeEpisodes: '/api/v2/hianime/anime/steinsgate-3/episodes',
-      searchBasic: '/api/v2/hianime/search?q=titan&page=1',
-      searchAdvanced: '/api/v2/hianime/search/advanced?q=girls&genres=action,adventure&type=movie&sort=score&season=spring&language=dub&status=finished-airing&rated=pg-13&start_date=2014-0-0&score=good',
-      searchSuggestion: '/api/v2/hianime/search/suggestion?q=titan',
-      producer: '/api/v2/hianime/producer/toei-animation?page=2',
-      genre: '/api/v2/hianime/genre/shounen?page=2',
-      category: '/api/v2/hianime/category/tv?page=2',
-      schedule: '/api/v2/hianime/schedule?date=2024-01-01',
-      episodeServers: '/api/v2/hianime/episode/servers?animeEpisodeId=steinsgate-3?ep=213',
-      episodeSources: '/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-2&category=sub',
-      animekaiHome: '/api/v2/animekai/home',
-      animekaiAzlist: '/api/v2/animekai/azlist/0-9?page=1',
-      animekaiDetails: '/api/v2/animekai/anime/one-piece-dk6r',
-      animekaiEpisodes: '/api/v2/animekai/anime/one-piece-dk6r/episodes',
-      animekaiEpisodesCompat: '/api/v2/animekai/one-piece-dk6r/episodes',
-      animekaiSearch: '/api/v2/animekai/search?q=one%20piece&page=1',
-      animekaiSearchAdvanced: '/api/v2/animekai/search/advanced?q=one%20piece&page=1',
-      animekaiSearchSuggestion: '/api/v2/animekai/search/suggestion?q=one',
-      animekaiProducer: '/api/v2/animekai/producer/toei-animation?page=1',
-      animekaiGenre: '/api/v2/animekai/genre/action?page=1',
-      animekaiCategory: '/api/v2/animekai/category/tv?page=1',
-      animekaiSchedule: '/api/v2/animekai/schedule?date=2026-01-01',
-      animekaiEpisodeServers: '/api/v2/animekai/episode/servers?animeEpisodeId=example',
-      animekaiEpisodeSources:
-        '/api/v2/animekai/episode/sources?animeEpisodeId=witch-hat-atelier-3e32&ep=1&server=server-1&category=sub',
-    }
+    docs: {
+      tip: 'Use query params for ep/server/category. URL fragments (#...) are ignored by the server.',
+      groups: ['hianime', 'animekai', 'compatibility'],
+    },
+    endpoints: {
+      hianime: {
+        home: '/api/v2/hianime/home',
+        azlist: '/api/v2/hianime/azlist/0-9?page=1',
+        animeDetails: '/api/v2/hianime/anime/attack-on-titan-112',
+        animeEpisodes: '/api/v2/hianime/anime/steinsgate-3/episodes',
+        search: {
+          basic: '/api/v2/hianime/search?q=titan&page=1',
+          advanced:
+            '/api/v2/hianime/search/advanced?q=girls&genres=action,adventure&type=movie&sort=score&season=spring&language=dub&status=finished-airing&rated=pg-13&start_date=2014-0-0&score=good',
+          suggestion: '/api/v2/hianime/search/suggestion?q=titan',
+        },
+        discover: {
+          producer: '/api/v2/hianime/producer/toei-animation?page=2',
+          genre: '/api/v2/hianime/genre/shounen?page=2',
+          category: '/api/v2/hianime/category/tv?page=2',
+          schedule: '/api/v2/hianime/schedule?date=2024-01-01',
+        },
+        episode: {
+          servers: '/api/v2/hianime/episode/servers?animeEpisodeId=steinsgate-3?ep=213',
+          sources:
+            '/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-2&category=sub',
+        },
+      },
+      animekai: {
+        home: '/api/v2/animekai/home',
+        azlist: '/api/v2/animekai/azlist/0-9?page=1',
+        animeDetails: '/api/v2/animekai/anime/one-piece-dk6r',
+        animeEpisodes: '/api/v2/animekai/anime/one-piece-dk6r/episodes',
+        search: {
+          basic: '/api/v2/animekai/search?q=one%20piece&page=1',
+          advanced: '/api/v2/animekai/search/advanced?q=one%20piece&page=1',
+          suggestion: '/api/v2/animekai/search/suggestion?q=one',
+        },
+        discover: {
+          producer: '/api/v2/animekai/producer/toei-animation?page=1',
+          genre: '/api/v2/animekai/genre/action?page=1',
+          category: '/api/v2/animekai/category/tv?page=1',
+          schedule: '/api/v2/animekai/schedule?date=2026-01-01',
+        },
+        episode: {
+          servers: '/api/v2/animekai/episode/servers?animeEpisodeId=example',
+          sources:
+            '/api/v2/animekai/episode/sources?animeEpisodeId=witch-hat-atelier-3e32&ep=1&server=server-1&category=sub',
+        },
+      },
+      compatibility: {
+        animekaiEpisodesLegacy: '/api/v2/animekai/one-piece-dk6r/episodes',
+      },
+    },
   });
 });
 
