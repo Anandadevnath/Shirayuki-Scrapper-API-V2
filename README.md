@@ -1,412 +1,245 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Framework-Hono-ee6c00?style=for-the-badge" alt="Hono">
+  <a href="https://github.com/Anandadevnath/Shirayuki-Scrapper-API-V2"><img src="https://img.shields.io/github/stars/Anandadevnath/Shirayuki-Scrapper-API-V2?style=social" alt="Stars"></a>
+  <a href="https://github.com/Anandadevnath/Shirayuki-Scrapper-API-V2/network/members"><img src="https://img.shields.io/github/forks/Anandadevnath/Shirayuki-Scrapper-API-V2?style=social" alt="Forks"></a>
+  <img src="https://img.shields.io/badge/Framework-Hono-ee6c00?style=for-the-badge&logo=fire" alt="Hono">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
-  <img src="https://img.shields.io/badge/API-REST-green?style=for-the-badge" alt="REST">
-  <img src="https://img.shields.io/badge/License-ISC-purple?style=for-the-badge" alt="ISC">
+  <img src="https://img.shields.io/badge/Platform-REST%20API-green?style=for-the-badge" alt="REST API">
+  <img src="https://img.shields.io/badge/License-ISC-purple?style=for-the-badge" alt="License">
 </p>
 
 <div align="center">
 
-<pre>
+```
 ███████╗██╗  ██╗██╗██████╗  █████╗ ██╗   ██╗██╗   ██╗██╗  ██╗██╗
 ██╔════╝██║  ██║██║██╔══██╗██╔══██╗╚██╗ ██╔╝██║   ██║██║ ██╔╝██║
 ███████╗███████║██║██████╔╝███████║ ╚████╔╝ ██║   ██║█████╔╝ ██║
 ╚════██║██╔══██║██║██╔══██╗██╔══██║  ╚██╔╝  ██║   ██║██╔═██╗ ██║
 ███████║██║  ██║██║██║  ██║██║  ██║   ██║   ╚██████╔╝██║  ██╗██║
 ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝
+```
 
-             ░▒▓ A N I M E   S C R A P P E R ▓▒░
-</pre>
+# 🔥 Shirayuki Scrapper API V2
 
-<i>Powered by the ancient art of web scraping — now with 100% more Hono</i>
+> **The ultimate anime scraping API — fast, lightweight, and powered by Hono**
+
+*A RESTful API for scraping anime data from Aniwatch. Features search, streaming sources, schedules, and more — all wrapped in a clean Hono interface.*
 
 </div>
+
 ---
 
-## ✨ What is this?
+## ✨ Features
 
-**Shirayuki Scrapper** is a sleek, anime-scraping API that wraps [Aniwatch](https://animekai.to) endpoints with love and care. It provides everything you need to build anime apps — from search to streaming sources.
+<div align="center">
 
-```
-    ┌──────────────────────────────────────────────────────┐
-    │                                                      │
-    │   🏠 Home        →  Spotlight, Trending, Top Anime   │
-    │   🔍 Search      →  Basic, Advanced, Suggestions      │
-    │   📺 Anime Info  →  Details, Episodes, Schedule       │
-    │   🎬 Streaming   →  Servers, Sources, Player Links    │
-    │                                                      │
-    └──────────────────────────────────────────────────────┘
-```
+| Feature | Description |
+|---------|-------------|
+| 🏠 **Home & Trending** | Spotlight, trending anime, top charts |
+| 🔍 **Smart Search** | Basic, advanced filters, autocomplete |
+| 📺 **Anime Details** | Full metadata, episodes, schedules |
+| 🎬 **Streaming Sources** | Episode servers, video links, proxy |
+| 🗓️ **Schedules** | Daily airing schedules by date |
+| 🌐 **CORS Proxy** | Bypass restrictions seamlessly |
+
+</div>
 
 ---
 
 ## 🚀 Quick Start
 
 ```bash
-# Clone it
-git clone <repo-url>
+# Clone the repository
+git clone https://github.com/Anandadevnath/Shirayuki-Scrapper-API-V2.git
+cd Shirayuki-Scrapper-API-V2
 
 # Install dependencies
 npm install
 
-# Fire it up!
+# Start the server
 npm run start
 
-# Server runs at (default port 3000, configurable via PORT env var)
-# ▸ http://localhost:3000/api/v2/animekai
+# Server runs at → http://localhost:3000/api/v2/animekai
 ```
 
 ---
 
-## � Key Dependencies
+## 📡 API Endpoints
 
-| Package | Purpose |
-|---------|---------|
-| `hono` | Lightweight web framework |
-| `puppeteer` | Headless browser for scraping |
-| `cheerio` | Server-side HTML parsing |
-| `axios` | HTTP client |
-| `cloudscraper` | Bypass Cloudflare protection |
-| `aniwatch` | AniWatch-specific scraping utilities |
-| `pino` | Fast JSON logging |
+### Core Endpoints
 
-> **Note:** Puppeteer may download Chromium on first install. For deployment, ensure your platform supports headless Chrome.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v2/animekai/home` | Spotlight, trending, top anime |
+| `GET` | `/api/v2/animekai/azlist/:sort` | Browse anime A-Z |
+| `GET` | `/api/v2/animekai/anime/:id` | Full anime details |
+| `GET` | `/api/v2/animekai/anime/:id/episodes` | Episode list |
+
+### Search
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v2/animekai/search?q=` | Basic search |
+| `GET` | `/api/v2/animekai/search/advanced` | Advanced filters |
+| `GET` | `/api/v2/animekai/search/suggestion` | Autocomplete |
+
+### Discovery
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v2/animekai/producer/:name` | Filter by studio |
+| `GET` | `/api/v2/animekai/genre/:name` | Filter by genre |
+| `GET` | `/api/v2/animekai/category/:name` | Curated lists |
+| `GET` | `/api/v2/animekai/schedule` | Daily schedule |
+
+### Streaming
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v2/animekai/episode/servers` | Get streaming servers |
+| `GET` | `/api/v2/animekai/episode/sources` | Get video sources |
+| `GET` | `/api/v2/animekai/proxy?url=` | CORS proxy |
 
 ---
 
-## �📡 Complete Endpoint Reference
+## 💡 Usage Examples
 
-### 🔺 HOME — The Starting Point
-
-```
-GET /api/v2/animekai/home
-```
-
-Returns spotlight highlights, trending anime, latest episodes, and top charts.
-
+### Get Trending Anime
 ```bash
 curl "http://localhost:3000/api/v2/animekai/home"
 ```
 
----
-
-### 📋 A-Z LIST — Browse Everything
-
-```
-GET /api/v2/animekai/azlist/:sortOption?page=:page
-```
-
-| Parameter   | Type   | Description                              |
-|-------------|--------|------------------------------------------|
-| `sortOption`| path   | `all` / `0-9` / `a-z`                    |
-| `page`      | query  | Page number (default: `1`)               |
-
+### Search for Anime
 ```bash
-# All anime, page 1
-curl "http://localhost:3000/api/v2/animekai/azlist/all?page=1"
-
-# A-F anime
-curl "http://localhost:3000/api/v2/animekai/azlist/a"
+curl "http://localhost:3000/api/v2/animekai/search?q=attack%20on%20titan"
 ```
 
----
-
-### 🎯 ANIME DETAILS — Deep Dive
-
-```
-GET /api/v2/animekai/anime/:animeId
-```
-
-Get full metadata for a specific anime.
-
+### Get Anime Details
 ```bash
 curl "http://localhost:3000/api/v2/animekai/anime/steinsgate-3"
 ```
 
----
-
-### 📺 EPISODES — Episode List
-
-```
-GET /api/v2/animekai/anime/:animeId/episodes
-```
-
+### Get Episode Servers
 ```bash
-curl "http://localhost:3000/api/v2/animekai/anime/steinsgate-3/episodes"
+curl "http://localhost:3000/api/v2/animekai/episode/servers?animeEpisodeId=steinsgate-3?ep=213"
 ```
 
----
-
-### ⏰ NEXT EPISODE SCHEDULE — Countdown
-
-```
-GET /api/v2/animekai/anime/:animeId/next-episode-schedule
-```
-
+### Advanced Search
 ```bash
-curl "http://localhost:3000/api/v2/animekai/anime/one-piece-100/next-episode-schedule"
+curl "http://localhost:3000/api/v2/animekai/search/advanced?q=titan&genres=action&type=movie&sort=score"
 ```
 
----
-
-### 🔍 SEARCH — Find Your Anime
-
-#### Basic Search
-```
-GET /api/v2/animekai/search?q=:query&page=:page
-```
-
-```bash
-curl "http://localhost:3000/api/v2/animekai/search?q=titan&page=1"
-```
-
-#### Advanced Search (All the Filters!)
-```
-GET /api/v2/animekai/search/advanced?q=:query&page=:page&genres=:genres&type=:type&status=:status&rated=:rated&score=:score&season=:season&language=:language&start_date=:start_date&end_date=:end_date&sort=:sort
-```
-
-```bash
-curl "http://localhost:3000/api/v2/animekai/search/advanced?q=girls\
-  &genres=action,adventure\
-  &type=movie\
-  &sort=score\
-  &season=spring\
-  &language=dub\
-  &status=finished-airing\
-  &rated=pg-13\
-  &start_date=2014-0-0\
-  &score=good"
-```
-
-#### Search Suggestions (Autocomplete)
-```
-GET /api/v2/animekai/search/suggestion?q=:query
-```
-
-```bash
-curl "http://localhost:3000/api/v2/animekai/search/suggestion?q=titan"
-```
-
----
-
-### 🏢 PRODUCER — Filter by Studio
-
-```
-GET /api/v2/animekai/producer/:name?page=:page
-```
-
-```bash
-curl "http://localhost:3000/api/v2/animekai/producer/toei-animation?page=1"
-```
-
----
-
-### 🏷️ GENRE — Filter by Category
-
-```
-GET /api/v2/animekai/genre/:name?page=:page
-```
-
-```bash
-curl "http://localhost:3000/api/v2/animekai/genre/action?page=1"
-```
-
----
-
-### 🗂️ CATEGORY — Curated Lists
-
-```
-GET /api/v2/animekai/category/:name?page=:page
-```
-
-```bash
-curl "http://localhost:3000/api/v2/animekai/category/most-popular?page=1"
-```
-
----
-
-### 📅 SCHEDULE — What's Airing Today?
-
-```
-GET /api/v2/animekai/schedule?date=:date&tzOffset=:minutes
-```
-
+### Get Schedule
 ```bash
 curl "http://localhost:3000/api/v2/animekai/schedule?date=2024-01-01&tzOffset=-330"
 ```
 
 ---
 
-### 🎬 EPISODE STREAMS — The Good Stuff
-
-#### Get Servers
-```
-GET /api/v2/animekai/episode/servers?animeEpisodeId=:animeEpisodeId
-```
-
-```bash
-curl "http://localhost:3000/api/v2/animekai/episode/servers?animeEpisodeId=steinsgate-3?ep=213"
-```
-
-#### Get Sources (Direct Links)
-```
-GET /api/v2/animekai/episode/sources?animeEpisodeId=:animeId&ep=:episodeId&server=:server&category=:category
-```
-
-| Parameter       | Required | Description                              |
-|-----------------|----------|------------------------------------------|
-| `animeEpisodeId`| ✅       | Anime slug (e.g., `steinsgate-3`)        |
-| `ep`            | ✅       | Numeric episode ID from source site      |
-| `server`        | ❌       | `hd-1` / `hd-2` / `hd-3`                |
-| `category`      | ❌       | `sub` / `dub`                           |
-
-```bash
-curl "http://localhost:3000/api/v2/animekai/episode/sources?\
-  animeEpisodeId=steinsgate-3&\
-  ep=230&\
-  server=hd-2&\
-  category=sub"
-```
-
----
-
-### 🌐 PROXY — Bypass CORS/Restrictions
-
-```
-GET /api/v2/animekai/proxy?url=:url
-```
-
-| Parameter | Required | Description                              |
-|-----------|----------|------------------------------------------|
-| `url`     | ✅       | Target URL to proxy (URL-encoded)        |
-
-```bash
-# Proxy a streaming URL
-curl "http://localhost:3000/api/v2/animekai/proxy?url=https%3A%2F%2Fexample.com%2Fvideo.m3u8"
-```
-
----
-
-## 🐉 AnimeKai Endpoints
-
-AnimeKai uses dynamic request signatures. Here's the fallback approach:
-
-#### Servers (AnimeKai)
-```bash
-curl "http://localhost:3000/api/v2/animekai/episode/servers?animeEpisodeId=witch-hat-atelier-3e32"
-```
-
-#### Sources (AnimeKai)
-```bash
-curl "http://localhost:3000/api/v2/animekai/episode/sources?\
-  animeEpisodeId=witch-hat-atelier-3e32&\
-  ep=1&\
-  server=server-1&\
-  category=sub"
-```
-
-> ⚠️ **Browser Tip:** Don't use `#` for fragments — query params after `#` aren't sent to the server!
-
----
-
-## 🔀 Server Alias Mapping
-
-```
-┌─────────┬──────────────┐
-│  Alias   │   Provider   │
-├─────────┼──────────────┤
-│  hd-1   │  megacloud   │
-│  hd-2   │  vidsrc      │
-│  hd-3   │  mycloud     │
-└─────────┴──────────────┘
-```
-
----
-
-## ❌ Error Handling
-
-```
-┌────────────┬─────────────────────────────────┐
-│  Status    │  Meaning                         │
-├────────────┼─────────────────────────────────┤
-│   400      │  Missing required parameters     │
-│   404      │  Route not found                 │
-│   500      │  Upstream or internal error      │
-└────────────┴─────────────────────────────────┘
-```
-
----
-
-## ⚙️ Environment Variables
+## ⚙️ Configuration
 
 Create a `.env` file in the project root:
 
-```
+```env
 PORT=3000                    # Server port (default: 3000)
 NODE_ENV=development         # Environment: development/production/test
 ```
 
 ---
 
-## 🗺️ Project Structure
+## 🛠️ Tech Stack
+
+<div align="center">
+
+| Technology | Purpose |
+|------------|---------|
+| <img src="https://img.shields.io/badge/Hono-ee6c00?style=flat-square&logo=fire" height="20"> | Web framework |
+| <img src="https://img.shields.io/badge/Puppeteer-40B5A4?style=flat-square&logo=headless-browser" height="20"> | Headless browser scraping |
+| <img src="https://img.shields.io/badge/Cheerio-259BFF?style=flat-square" height="20"> | HTML parsing |
+| <img src="https://img.shields.io/badge/Axios-5A29E4?style=flat-square" height="20"> | HTTP client |
+| <img src="https://img.shields.io/badge/Pino-FFD43B?style=flat-square" height="20"> | Fast logging |
+
+</div>
+
+---
+
+## 📁 Project Structure
 
 ```
 shirayuki-scrapper-api-v2/
-├── index.js                 # Entry point
+├── index.js                    # Entry point
 ├── src/
 │   ├── animekai/
-│   │   ├── controllers/     # Business logic (16 endpoints)
-│   │   ├── router/          # Route definitions (15 routes)
-│   │   └── scraper/         # Scraping logic (14 scrapers)
+│   │   ├── controllers/        # Business logic (16 controllers)
+│   │   ├── router/            # Route definitions (15 routers)
+│   │   └── scraper/           # Scraping utilities
 │   ├── config/
-│   │   ├── env.js           # Environment validation
-│   │   └── errorHandler.js  # Error handling
+│   │   ├── env.js             # Environment validation
+│   │   └── errorHandler.js    # Error handling
 │   └── utils/
-│       ├── cache.js         # Caching utilities
-│       ├── constants.js     # App constants
-│       ├── scrapper-deps.js # Scraper dependencies
+│       ├── cache.js           # In-memory caching
+│       ├── constants.js       # Base URLs & user agent
+│       ├── scrapper-deps.js   # Scraping dependencies
 │       └── scrapper-helpers.js # Helper functions
 ├── package.json
-├── vercel.json              # Vercel deployment config
-├── LICENSE
+├── vercel.json                # Vercel deployment config
 └── README.md
 ```
 
 ---
 
+## 🔀 Server Alias Mapping
+
+| Alias | Provider |
+|-------|----------|
+| `hd-1` | megacloud |
+| `hd-2` | vidsrc |
+| `hd-3` | mycloud |
+
+---
+
+## ⚠️ Error Handling
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Missing required parameters |
+| `404` | Route not found |
+| `500` | Upstream or internal error |
+
+---
+
 ## 🤝 Contributing
+
+Contributions are welcome! Here's how you can help:
 
 ```bash
 1. 🍴 Fork the repository
-2. 🌿 Create a feature branch
-3. 💬 Commit with clear messages
-4. 🔀 Open a pull request
+2. 🌿 Create a feature branch (git checkout -b feature/amazing-feature)
+3. 💬 Commit your changes (git commit -m 'Add amazing feature')
+4. 🔀 Push to the branch (git push origin feature/amazing-feature)
+5. 🎁 Open a Pull Request
 ```
 
 ---
 
 ## 📜 License
 
-```
-ISC License — Free to use, modify, and share.
-```
+This project is licensed under the **ISC License** — free to use, modify, and share.
 
 ---
 
+<div align="center">
+
 ```
-    ████████╗██╗  ██╗███████╗
-    ╚══██╔══╝██║  ██║██╔════╝
-       ██║   ███████║█████╗  
-       ██║   ██╔══██║██╔══╝  
-       ██║   ██║  ██║███████╗
-       ╚═╝   ╚═╝  ╚═╝╚══════╝
-                                    
-    ███████╗███╗   ██╗██████╗ 
-    ██╔════╝████╗  ██║██╔══██╗
-    █████╗  ██╔██╗ ██║██║  ██║
-    ██╔══╝  ██║╚██╗██║██║  ██║
-    ███████╗██║ ╚████║██████╔╝
-    ╚══════╝╚═╝  ╚═══╝╚═════╝ 
+██████╗ ███████╗██╗   ██╗    ███████╗███╗   ██╗██████╗ 
+██╔══██╗██╔════╝██║   ██║    ██╔════╝████╗  ██║██╔══██╗
+██║  ██║█████╗  ██║   ██║    █████╗  ██╔██╗ ██║██║  ██║
+██║  ██║██╔══╝  ╚██╗ ██╔╝    ██╔══╝  ██║╚██╗██║██║  ██║
+██████╔╝███████╗ ╚████╔╝     ███████╗██║ ╚████║██████╔╝
+╚═════╝ ╚══════╝  ╚═══╝      ╚══════╝╚═╝  ╚═══╝╚═════╝ 
 ```
 
-*Made with ❤️ and lots of coffee*
+*Built with ❤️ and lots of coffee*
+
+**Stars & Forks are appreciated!**
+
+</div>
