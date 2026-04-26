@@ -2,9 +2,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Framework-Hono-ee6c00?style=for-the-badge" alt="Hono">
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
   <img src="https://img.shields.io/badge/API-REST-green?style=for-the-badge" alt="REST">
-  <img src="https://img.shields.io/badge/License-MIT-purple?style=for-the-badge" alt="MIT">
+  <img src="https://img.shields.io/badge/License-ISC-purple?style=for-the-badge" alt="ISC">
 </p>
 
 ```
@@ -42,7 +42,7 @@
 ## 🚀 Quick Start
 
 ```bash
-# Clone it (or copy-paste, we don't judge)
+# Clone it
 git clone <repo-url>
 
 # Install dependencies
@@ -51,13 +51,29 @@ npm install
 # Fire it up!
 npm run start
 
-# Server runs at
+# Server runs at (default port 3000, configurable via PORT env var)
 # ▸ http://localhost:3000/api/v2/animekai
 ```
 
 ---
 
-## 📡 Complete Endpoint Reference
+## � Key Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `hono` | Lightweight web framework |
+| `puppeteer` | Headless browser for scraping |
+| `cheerio` | Server-side HTML parsing |
+| `axios` | HTTP client |
+| `cloudscraper` | Bypass Cloudflare protection |
+| `aniwatch` | AniWatch-specific scraping utilities |
+| `pino` | Fast JSON logging |
+
+> **Note:** Puppeteer may download Chromium on first install. For deployment, ensure your platform supports headless Chrome.
+
+---
+
+## �📡 Complete Endpoint Reference
 
 ### 🔺 HOME — The Starting Point
 
@@ -253,6 +269,23 @@ curl "http://localhost:3000/api/v2/animekai/episode/sources?\
 
 ---
 
+### 🌐 PROXY — Bypass CORS/Restrictions
+
+```
+GET /api/v2/animekai/proxy?url=:url
+```
+
+| Parameter | Required | Description                              |
+|-----------|----------|------------------------------------------|
+| `url`     | ✅       | Target URL to proxy (URL-encoded)        |
+
+```bash
+# Proxy a streaming URL
+curl "http://localhost:3000/api/v2/animekai/proxy?url=https%3A%2F%2Fexample.com%2Fvideo.m3u8"
+```
+
+---
+
 ## 🐉 AnimeKai Endpoints
 
 AnimeKai uses dynamic request signatures. Here's the fallback approach:
@@ -303,17 +336,38 @@ curl "http://localhost:3000/api/v2/animekai/episode/sources?\
 
 ---
 
+## ⚙️ Environment Variables
+
+Create a `.env` file in the project root:
+
+```
+PORT=3000                    # Server port (default: 3000)
+NODE_ENV=development         # Environment: development/production/test
+```
+
+---
+
 ## 🗺️ Project Structure
 
 ```
-shirayuki-scrapper/
+shirayuki-scrapper-api-v2/
+├── index.js                 # Entry point
 ├── src/
-│   ├── index.ts           # Entry point
-│   ├── routes/            # API routes
-│   ├── utils/             # Helpers
-│   └── types/             # TypeScript types
+│   ├── animekai/
+│   │   ├── controllers/     # Business logic (16 endpoints)
+│   │   ├── router/          # Route definitions (15 routes)
+│   │   └── scraper/         # Scraping logic (14 scrapers)
+│   ├── config/
+│   │   ├── env.js           # Environment validation
+│   │   └── errorHandler.js  # Error handling
+│   └── utils/
+│       ├── cache.js         # Caching utilities
+│       ├── constants.js     # App constants
+│       ├── scrapper-deps.js # Scraper dependencies
+│       └── scrapper-helpers.js # Helper functions
 ├── package.json
-├── tsconfig.json
+├── vercel.json              # Vercel deployment config
+├── LICENSE
 └── README.md
 ```
 
@@ -333,7 +387,7 @@ shirayuki-scrapper/
 ## 📜 License
 
 ```
-MIT License — Free to use, modify, and share.
+ISC License — Free to use, modify, and share.
 ```
 
 ---
