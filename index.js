@@ -3,21 +3,6 @@ import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import env from './src/config/env.js';
-import homeRouter from './src/router/home.js';
-import azlistRouter from './src/router/azlist.js';
-import animeRouter from './src/router/anime.js';
-import searchRouter from './src/router/search.js';
-import searchAdvancedRouter from './src/router/search-advanced.js';
-import searchSuggestionRouter from './src/router/search-suggestion.js';
-import producerRouter from './src/router/producer.js';
-import genreRouter from './src/router/genre.js';
-import categoryRouter from './src/router/category.js';
-import scheduleRouter from './src/router/schedule.js';
-import episodesRouter from './src/router/episodes.js';
-import nextEpisodeRouter from './src/router/next-episode.js';
-import episodeServersRouter from './src/router/episode-servers.js';
-import hianimeEpisodeSourcesRouter from './src/router/streaming-server.js';
-import proxyRouter from './src/router/proxy.js';
 import animekaiHomeRouter from './src/animekai/router/home.js';
 import animekaiAzlistRouter from './src/animekai/router/azlist.js';
 import animekaiAnimeRouter from './src/animekai/router/anime.js';
@@ -48,32 +33,9 @@ app.get('/', (c) => {
     version: '2.0.0',
     docs: {
       tip: 'Use query params for ep/server/category. URL fragments (#...) are ignored by the server.',
-      groups: ['hianime', 'animekai', 'compatibility'],
+      groups: ['animekai', 'compatibility'],
     },
     endpoints: {
-      hianime: {
-        home: '/api/v2/hianime/home',
-        azlist: '/api/v2/hianime/azlist/0-9?page=1',
-        animeDetails: '/api/v2/hianime/anime/attack-on-titan-112',
-        animeEpisodes: '/api/v2/hianime/anime/steinsgate-3/episodes',
-        search: {
-          basic: '/api/v2/hianime/search?q=titan&page=1',
-          advanced:
-            '/api/v2/hianime/search/advanced?q=girls&genres=action,adventure&type=movie&sort=score&season=spring&language=dub&status=finished-airing&rated=pg-13&start_date=2014-0-0&score=good',
-          suggestion: '/api/v2/hianime/search/suggestion?q=titan',
-        },
-        discover: {
-          producer: '/api/v2/hianime/producer/toei-animation?page=2',
-          genre: '/api/v2/hianime/genre/shounen?page=2',
-          category: '/api/v2/hianime/category/tv?page=2',
-          schedule: '/api/v2/hianime/schedule?date=2024-01-01',
-        },
-        episode: {
-          servers: '/api/v2/hianime/episode/servers?animeEpisodeId=steinsgate-3?ep=213',
-          sources:
-            '/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-2&category=sub',
-        },
-      },
       animekai: {
         home: '/api/v2/animekai/home',
         azlist: '/api/v2/animekai/azlist/0-9?page=1',
@@ -104,22 +66,6 @@ app.get('/', (c) => {
 });
 
 // API Routes
-app.route('/api/v2/hianime/home', homeRouter);
-app.route('/api/v2/hianime/azlist', azlistRouter);
-app.route('/api/v2/hianime/anime', animeRouter);
-app.route('/api/v2/hianime/search', searchRouter);
-app.route('/api/v2/hianime/search/advanced', searchAdvancedRouter);
-app.route('/api/v2/hianime/search/suggestion', searchSuggestionRouter);
-app.route('/api/v2/hianime/producer', producerRouter);
-app.route('/api/v2/hianime/genre', genreRouter);
-app.route('/api/v2/hianime/category', categoryRouter);
-app.route('/api/v2/hianime/schedule', scheduleRouter);
-app.route('/api/v2/hianime/anime', episodesRouter);
-app.route('/api/v2/hianime/anime', nextEpisodeRouter);
-
-app.route('/api/v2/hianime/episode', episodeServersRouter);
-app.route('/api/v2/hianime/episode/sources', hianimeEpisodeSourcesRouter);
-app.route('/api/v2/hianime/proxy', proxyRouter);
 app.route('/api/v2/animekai/home', animekaiHomeRouter);
 app.route('/api/v2/animekai/azlist', animekaiAzlistRouter);
 app.route('/api/v2/animekai/anime', animekaiAnimeRouter);

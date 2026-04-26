@@ -2,12 +2,6 @@
 
 Anime scraping API powered by Hono. This project exposes a full set of Aniwatch endpoints for discovery, metadata, episodes, server resolution, direct sources, and proxy streaming.
 
-## Base URL
-
-```text
-http://localhost:3000/api/v2/hianime
-```
-
 ## AnimeKai Base URL
 
 ```text
@@ -31,13 +25,13 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/home
+GET /api/v2/animekai/home
 ```
 
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/home"
+curl "http://localhost:3000/api/v2/animekai/home"
 ```
 
 ### 3) A-Z List
@@ -48,7 +42,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/azlist/:sortOption?page=:page
+GET /api/v2/animekai/azlist/:sortOption?page=:page
 ```
 
 Params:
@@ -58,7 +52,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/azlist/a?page=1"
+curl "http://localhost:3000/api/v2/animekai/azlist/a?page=1"
 ```
 
 ### 4) Anime Details
@@ -69,7 +63,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/anime/:animeId
+GET /api/v2/animekai/anime/:animeId
 ```
 
 Params:
@@ -78,7 +72,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/anime/steinsgate-3"
+curl "http://localhost:3000/api/v2/animekai/anime/steinsgate-3"
 ```
 
 ### 5) Anime Episodes
@@ -89,7 +83,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/anime/:animeId/episodes
+GET /api/v2/animekai/anime/:animeId/episodes
 ```
 
 Params:
@@ -98,7 +92,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/anime/steinsgate-3/episodes"
+curl "http://localhost:3000/api/v2/animekai/anime/steinsgate-3/episodes"
 ```
 
 ### 6) Next Episode Schedule
@@ -109,7 +103,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/anime/:animeId/next-episode-schedule
+GET /api/v2/animekai/anime/:animeId/next-episode-schedule
 ```
 
 Params:
@@ -118,7 +112,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/anime/one-piece-100/next-episode-schedule"
+curl "http://localhost:3000/api/v2/animekai/anime/one-piece-100/next-episode-schedule"
 ```
 
 ### 7) Basic Search
@@ -129,7 +123,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/search?q=:query&page=:page
+GET /api/v2/animekai/search?q=:query&page=:page
 ```
 
 Params:
@@ -139,7 +133,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/search?q=titan&page=1"
+curl "http://localhost:3000/api/v2/animekai/search?q=titan&page=1"
 ```
 
 ### 8) Advanced Search
@@ -150,7 +144,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/search/advanced?q=:query&page=:page&genres=:genres&type=:type&status=:status&rated=:rated&score=:score&season=:season&language=:language&start_date=:start_date&end_date=:end_date&sort=:sort
+GET /api/v2/animekai/search/advanced?q=:query&page=:page&genres=:genres&type=:type&status=:status&rated=:rated&score=:score&season=:season&language=:language&start_date=:start_date&end_date=:end_date&sort=:sort
 ```
 
 Params:
@@ -161,7 +155,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/search/advanced?q=girls&genres=action,adventure&type=movie&sort=score&season=spring&language=dub&status=finished-airing&rated=pg-13&start_date=2014-0-0&score=good"
+curl "http://localhost:3000/api/v2/animekai/search/advanced?q=girls&genres=action,adventure&type=movie&sort=score&season=spring&language=dub&status=finished-airing&rated=pg-13&start_date=2014-0-0&score=good"
 ```
 
 ### 9) Search Suggestion
@@ -172,7 +166,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/search/suggestion?q=:query
+GET /api/v2/animekai/search/suggestion?q=:query
 ```
 
 Params:
@@ -181,7 +175,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/search/suggestion?q=titan"
+curl "http://localhost:3000/api/v2/animekai/search/suggestion?q=titan"
 ```
 
 ### 10) Producer
@@ -192,7 +186,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/producer/:name?page=:page
+GET /api/v2/animekai/producer/:name?page=:page
 ```
 
 Params:
@@ -202,7 +196,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/producer/toei-animation?page=1"
+curl "http://localhost:3000/api/v2/animekai/producer/toei-animation?page=1"
 ```
 
 ### 11) Genre
@@ -213,7 +207,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/genre/:name?page=:page
+GET /api/v2/animekai/genre/:name?page=:page
 ```
 
 Params:
@@ -223,7 +217,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/genre/action?page=1"
+curl "http://localhost:3000/api/v2/animekai/genre/action?page=1"
 ```
 
 ### 12) Category
@@ -234,7 +228,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/category/:name?page=:page
+GET /api/v2/animekai/category/:name?page=:page
 ```
 
 Params:
@@ -244,7 +238,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/category/most-popular?page=1"
+curl "http://localhost:3000/api/v2/animekai/category/most-popular?page=1"
 ```
 
 ### 13) Schedule
@@ -255,7 +249,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/schedule?date=:date&tzOffset=:minutes
+GET /api/v2/animekai/schedule?date=:date&tzOffset=:minutes
 ```
 
 Params:
@@ -265,7 +259,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/schedule?date=2024-01-01&tzOffset=-330"
+curl "http://localhost:3000/api/v2/animekai/schedule?date=2024-01-01&tzOffset=-330"
 ```
 
 ### 14) Episode Servers
@@ -277,7 +271,7 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/episode/servers?animeEpisodeId=:animeEpisodeId
+GET /api/v2/animekai/episode/servers?animeEpisodeId=:animeEpisodeId
 ```
 
 Params:
@@ -286,7 +280,7 @@ Params:
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/episode/servers?animeEpisodeId=steinsgate-3?ep=213"
+curl "http://localhost:3000/api/v2/animekai/episode/servers?animeEpisodeId=steinsgate-3?ep=213"
 ```
 
 ### 15) Episode Sources
@@ -297,19 +291,19 @@ What it does:
 Endpoint:
 
 ```http
-GET /api/v2/hianime/episode/sources?animeEpisodeId=:animeId&ep=:episodeId&server=:server&category=:category
+GET /api/v2/animekai/episode/sources?animeEpisodeId=:animeId&ep=:episodeId&server=:server&category=:category
 ```
 
 Params:
 - animeEpisodeId (query, required): anime slug, example steinsgate-3
-- ep (query, required): numeric episode id used by hianime, example 230
+- ep (query, required): numeric episode id used by the source site, example 230
 - server (query, optional): hd-1, hd-2, hd-3
 - category (query, optional): sub or dub
 
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v2/hianime/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-2&category=sub"
+curl "http://localhost:3000/api/v2/animekai/episode/sources?animeEpisodeId=steinsgate-3&ep=230&server=hd-2&category=sub"
 ```
 
 ## AnimeKai Endpoints
