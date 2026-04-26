@@ -1,6 +1,13 @@
 <p align="center">
-  <a href="https://github.com/Anandadevnath/Shirayuki-Scrapper-API-V2"><img src="https://img.shields.io/github/stars/Anandadevnath/Shirayuki-Scrapper-API-V2?style=social" alt="Stars"></a>
-  <a href="https://github.com/Anandadevnath/Shirayuki-Scrapper-API-V2/network/members"><img src="https://img.shields.io/github/forks/Anandadevnath/Shirayuki-Scrapper-API-V2?style=social" alt="Forks"></a>
+  <a href="https://github.com/Anandadevnath/Shirayuki-Scrapper-API-V2">
+    <img src="https://img.shields.io/github/stars/Anandadevnath/Shirayuki-Scrapper-API-V2?style=social" alt="Stars">
+  </a>
+  <a href="https://github.com/Anandadevnath/Shirayuki-Scrapper-API-V2/network/members">
+    <img src="https://img.shields.io/github/forks/Anandadevnath/Shirayuki-Scrapper-API-V2?style=social" alt="Forks">
+  </a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Framework-Hono-ee6c00?style=for-the-badge&logo=fire" alt="Hono">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
   <img src="https://img.shields.io/badge/Platform-REST%20API-green?style=for-the-badge" alt="REST API">
@@ -9,20 +16,21 @@
 
 <div align="center">
 
-```
+<pre>
 ███████╗██╗  ██╗██╗██████╗  █████╗ ██╗   ██╗██╗   ██╗██╗  ██╗██╗
 ██╔════╝██║  ██║██║██╔══██╗██╔══██╗╚██╗ ██╔╝██║   ██║██║ ██╔╝██║
 ███████╗███████║██║██████╔╝███████║ ╚████╔╝ ██║   ██║█████╔╝ ██║
 ╚════██║██╔══██║██║██╔══██╗██╔══██║  ╚██╔╝  ██║   ██║██╔═██╗ ██║
 ███████║██║  ██║██║██║  ██║██║  ██║   ██║   ╚██████╔╝██║  ██╗██║
 ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝
-```
+</pre>
 
 # 🔥 Shirayuki Scrapper API V2
 
-> **The ultimate anime scraping API — fast, lightweight, and powered by Hono**
+**The ultimate anime scraping API — fast, lightweight, and powered by Hono**
 
-*A RESTful API for scraping anime data from Aniwatch. Features search, streaming sources, schedules, and more — all wrapped in a clean Hono interface.*
+*A RESTful API for scraping anime data from Aniwatch.  
+Features search, streaming sources, schedules, and more — all wrapped in a clean Hono interface.*
 
 </div>
 
