@@ -31,10 +31,6 @@ app.get('/', (c) => {
   return c.json({
     message: 'Shirayuki Scrapper API V2',
     version: '2.0.0',
-    docs: {
-      tip: 'Use query params for ep/server/category. URL fragments (#...) are ignored by the server.',
-      groups: ['animekai', 'compatibility'],
-    },
     endpoints: {
       animekai: {
         home: '/api/v2/animekai/home',

@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "nodemon index.js",
-    "dev": "nodemon --watch index.js"
+    "dev": "nodemon --watch index.js --watch src index.js"
   },
   "keywords": [
     "anime",
