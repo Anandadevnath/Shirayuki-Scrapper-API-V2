@@ -1,5 +1,3 @@
-# 🎋 Shirayuki Scrapper API V2
-
 <p align="center">
   <img src="https://img.shields.io/badge/Framework-Hono-ee6c00?style=for-the-badge" alt="Hono">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
@@ -7,19 +5,22 @@
   <img src="https://img.shields.io/badge/License-ISC-purple?style=for-the-badge" alt="ISC">
 </p>
 
-```
-     ██████╗ ██████╗ ███╗   ██╗███████╗██╗ ██████╗ 
-    ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║██╔════╝ 
-    ██║     ██║   ██║██╔██╗ ██║███████╗██║██║  ███╗
-    ██║     ██║   ██║██║╚██╗██║╚════██║██║██║   ██║
-    ╚██████╗╚██████╔╝██║ ╚████║███████║██║╚██████╔╝
-     ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝ ╚═════╝ 
-                                                    
-              ░▒▓ A N I M E  S C R A P P E R ▓▒░
-```
+<div align="center">
 
-> *Powered by the ancient art of web scraping — now with 100% more Hono*
+<pre>
+███████╗██╗  ██╗██╗██████╗  █████╗ ██╗   ██╗██╗   ██╗██╗  ██╗██╗
+██╔════╝██║  ██║██║██╔══██╗██╔══██╗╚██╗ ██╔╝██║   ██║██║ ██╔╝██║
+███████╗███████║██║██████╔╝███████║ ╚████╔╝ ██║   ██║█████╔╝ ██║
+╚════██║██╔══██║██║██╔══██╗██╔══██║  ╚██╔╝  ██║   ██║██╔═██╗ ██║
+███████║██║  ██║██║██║  ██║██║  ██║   ██║   ╚██████╔╝██║  ██╗██║
+╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝
 
+             ░▒▓ A N I M E   S C R A P P E R ▓▒░
+</pre>
+
+<i>Powered by the ancient art of web scraping — now with 100% more Hono</i>
+
+</div>
 ---
 
 ## ✨ What is this?
