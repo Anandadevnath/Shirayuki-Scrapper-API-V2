@@ -1,0 +1,32 @@
+import { getMiruroAnimeDetails } from '../scraper/anime.js';
+
+export const miruroAnimeController = async (c) => {
+  try {
+    const animeId = c.req.param('animeId');
+
+    if (!animeId) {
+      return c.json(
+        {
+          success: false,
+          error: 'Anime ID is required',
+        },
+        400
+      );
+    }
+
+    const data = await getMiruroAnimeDetails(animeId);
+
+    return c.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    return c.json(
+      {
+        success: false,
+        error: error.message,
+      },
+      500
+    );
+  }
+};

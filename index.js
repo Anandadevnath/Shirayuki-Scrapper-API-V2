@@ -20,6 +20,8 @@ import animekaiEpisodeSourcesRouter from './src/animekai/router/streaming-server
 import animekaiProxyRouter from './src/animekai/router/proxy.js';
 import { animekaiEpisodesController } from './src/animekai/controllers/episodes.js';
 import miruroHomeRouter from './src/miruro/router/home.js';
+import miruroSearchRouter from './src/miruro/router/search.js';
+import miruroAnimeRouter from './src/miruro/router/anime.js';
 
 const app = new Hono();
 
@@ -57,6 +59,8 @@ app.get('/', (c) => {
       },
       miruro: {
         home: '/api/v2/miruro/home',
+        search: '/api/v2/miruro/search?q=one%20piece&genres=Adventure&genres=Action&tags=Acting&format=SPECIAL&status=FINISHED&year=2027&sort=POPULARITY_DESC',
+        animeDetails: '/api/v2/miruro/anime/21',
       },
     },
   });
@@ -82,6 +86,8 @@ app.route('/api/v2/animekai/proxy', animekaiProxyRouter);
 
 // Miruro Routes
 app.route('/api/v2/miruro/home', miruroHomeRouter);
+app.route('/api/v2/miruro/search', miruroSearchRouter);
+app.route('/api/v2/miruro/anime', miruroAnimeRouter);
 
 // Compatibility alias: supports /api/v2/animekai/:animeId/episodes format.
 app.get('/api/v2/animekai/:animeId/episodes', animekaiEpisodesController);
