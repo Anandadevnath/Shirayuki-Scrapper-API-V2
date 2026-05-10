@@ -19,22 +19,7 @@ import animekaiEpisodeServersRouter from './src/animekai/router/episode-servers.
 import animekaiEpisodeSourcesRouter from './src/animekai/router/streaming-server.js';
 import animekaiProxyRouter from './src/animekai/router/proxy.js';
 import { animekaiEpisodesController } from './src/animekai/controllers/episodes.js';
-import hianimeHomeRouter from './src/hianime/router/home.js';
-import hianimeAzlistRouter from './src/hianime/router/azlist.js';
-import hianimeAnimeRouter from './src/hianime/router/anime.js';
-import hianimeSearchRouter from './src/hianime/router/search.js';
-import hianimeSearchAdvancedRouter from './src/hianime/router/search-advanced.js';
-import hianimeSearchSuggestionRouter from './src/hianime/router/search-suggestion.js';
-import hianimeProducerRouter from './src/hianime/router/producer.js';
-import hianimeGenreRouter from './src/hianime/router/genre.js';
-import hianimeCategoryRouter from './src/hianime/router/category.js';
-import hianimeScheduleRouter from './src/hianime/router/schedule.js';
-import hianimeEpisodesRouter from './src/hianime/router/episodes.js';
-import hianimeNextEpisodeRouter from './src/hianime/router/next-episode.js';
-import hianimeEpisodeServersRouter from './src/hianime/router/episode-servers.js';
-import hianimeEpisodeSourcesRouter from './src/hianime/router/streaming-server.js';
-import hianimeProxyRouter from './src/hianime/router/proxy.js';
-import { hianimeEpisodesController } from './src/hianime/controllers/episodes.js';
+import miruroHomeRouter from './src/miruro/router/home.js';
 
 const app = new Hono();
 
@@ -70,27 +55,8 @@ app.get('/', (c) => {
             '/api/v2/animekai/episode/sources?animeEpisodeId=witch-hat-atelier-3e32&ep=1&server=server-1&category=sub',
         },
       },
-      hianime: {
-        home: '/api/v2/hianime/home',
-        azlist: '/api/v2/hianime/azlist/0-9?page=1',
-        animeDetails: '/api/v2/hianime/anime/one-piece',
-        animeEpisodes: '/api/v2/hianime/anime/one-piece-dk6r/episodes',
-        search: {
-          basic: '/api/v2/hianime/search?q=one%20piece&page=1',
-          advanced: '/api/v2/hianime/search/advanced?q=one%20piece&page=1',
-          suggestion: '/api/v2/hianime/search/suggestion?q=one',
-        },
-        discover: {
-          producer: '/api/v2/hianime/producer/toei-animation?page=1',
-          genre: '/api/v2/hianime/genre/action?page=1',
-          category: '/api/v2/hianime/category/tv?page=1',
-          schedule: '/api/v2/hianime/schedule?date=2026-01-01',
-        },
-        episode: {
-          servers: '/api/v2/hianime/episode/servers?animeEpisodeId=example',
-          sources:
-            '/api/v2/hianime/episode/sources?animeEpisodeId=witch-hat-atelier-3e32&ep=1&server=server-1&category=sub',
-        },
+      miruro: {
+        home: '/api/v2/miruro/home',
       },
     },
   });
@@ -114,26 +80,11 @@ app.route('/api/v2/animekai/episode', animekaiEpisodeServersRouter);
 app.route('/api/v2/animekai/episode/sources', animekaiEpisodeSourcesRouter);
 app.route('/api/v2/animekai/proxy', animekaiProxyRouter);
 
-app.route('/api/v2/hianime/home', hianimeHomeRouter);
-app.route('/api/v2/hianime/azlist', hianimeAzlistRouter);
-app.route('/api/v2/hianime/anime', hianimeAnimeRouter);
-app.route('/api/v2/hianime/search', hianimeSearchRouter);
-app.route('/api/v2/hianime/search/advanced', hianimeSearchAdvancedRouter);
-app.route('/api/v2/hianime/search/suggestion', hianimeSearchSuggestionRouter);
-app.route('/api/v2/hianime/producer', hianimeProducerRouter);
-app.route('/api/v2/hianime/genre', hianimeGenreRouter);
-app.route('/api/v2/hianime/category', hianimeCategoryRouter);
-app.route('/api/v2/hianime/schedule', hianimeScheduleRouter);
-app.route('/api/v2/hianime/anime', hianimeEpisodesRouter);
-app.route('/api/v2/hianime/anime', hianimeNextEpisodeRouter);
-app.route('/api/v2/hianime/episode', hianimeEpisodeServersRouter);
-app.route('/api/v2/hianime/episode/sources', hianimeEpisodeSourcesRouter);
-app.route('/api/v2/hianime/proxy', hianimeProxyRouter);
+// Miruro Routes
+app.route('/api/v2/miruro/home', miruroHomeRouter);
 
 // Compatibility alias: supports /api/v2/animekai/:animeId/episodes format.
 app.get('/api/v2/animekai/:animeId/episodes', animekaiEpisodesController);
-// Compatibility alias: supports /api/v2/hianime/:animeId/episodes format.
-app.get('/api/v2/hianime/:animeId/episodes', hianimeEpisodesController);
 
 app.notFound((c) => {
   return c.json({

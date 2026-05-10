@@ -1,8 +1,9 @@
-import { getHiAnimeHomePage } from '../scraper/home.js';
+import { getMiruroCompleteHome } from '../scraper/home.js';
 
-export const hianimeHomeController = async (c) => {
+export const miruroHomeController = async (c) => {
   try {
-    const data = await getHiAnimeHomePage();
+    const data = await getMiruroCompleteHome();
+
     return c.json({
       success: true,
       data,
