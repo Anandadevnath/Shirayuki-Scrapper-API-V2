@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon index.js",
-    "dev": "nodemon --watch index.js --watch src index.js"
+    "start": "node index.js",
+    "dev": "node index.js"
   },
   "keywords": [
     "anime",

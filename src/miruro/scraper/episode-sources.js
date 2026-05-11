@@ -6,7 +6,7 @@ import { USER_AGENT } from '../../utils/constants.js';
 
 const MIRURO_BASE_URL = 'https://www.miruro.tv';
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
-const HEADLESS_TIMEOUT_MS = 20000;
+const HEADLESS_TIMEOUT_MS = 25000;
 const PIPE_OBF_KEY = '71951034f8fbcf53d89db52ceb3dc22c';
 const PIPE_PROTOCOL_VERSION = '0.2.0';
 const HEADLESS_BLOCKED_RESOURCES = new Set(['image', 'stylesheet', 'font']);
@@ -557,68 +557,170 @@ const extractM3u8WithPuppeteer = async (targetUrl, referer, serverName, category
       );
     });
 
-    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: HEADLESS_TIMEOUT_MS });
+    await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: HEADLESS_TIMEOUT_MS });
 
-    const initialM3u8 = m3u8Url;
+    // Additional wait for video player to initialize
+    await new Promise((resolve) => setTimeout(resolve, 4000));
 
-    const selectionResult = await page.evaluate(
-      async ({ server, categoryLabel }) => {
-        const normalize = (value) => String(value || '').toLowerCase().trim();
-        const targetServer = normalize(server);
-        const targetCategory = normalize(categoryLabel);
+    let initialM3u8 = m3u8Url;
+    let selectionResult = null;
 
-        const getTriggers = () => Array.from(document.querySelectorAll('button[class*="_trigger_"]'));
-        const getItems = () => Array.from(document.querySelectorAll('[class*="_item_"]'));
+    // Try to interact with controls inside iframe (where the actual player is)
+    const iframeElement = await page.$('iframe[src*="2anime"]');
+    if (iframeElement) {
+      try {
+        const frame = await iframeElement.contentFrame();
+        if (frame) {
+          // Wait for iframe to load its content
+          await new Promise((resolve) => setTimeout(resolve, 3000));
 
-        const clickItem = (textMatch) => {
-          const items = getItems();
-          for (const node of items) {
-            const text = normalize(node.textContent || '');
-            if (text === textMatch) {
-              const target = node.closest('button') || node;
-              target.click();
-              return true;
+          // Try to capture m3u8 from iframe network requests
+          frame.on('request', (req) => {
+            const url = req.url();
+            if (url && url.includes('.m3u8')) {
+              m3u8Url = url;
+            }
+          });
+
+          // Try to click server/category buttons inside iframe
+          selectionResult = await frame.evaluate(
+            async ({ server, categoryLabel }) => {
+              const normalize = (value) => String(value || '').toLowerCase().trim();
+              const targetServer = normalize(server);
+              const targetCategory = normalize(categoryLabel);
+
+              // Try multiple selector patterns for controls
+              const getTriggers = () => {
+                return Array.from(document.querySelectorAll('button, [role="button"], .btn, [class*="trigger"], [class*="button"], [class*="select"]'));
+              };
+              const getItems = () => {
+                return Array.from(document.querySelectorAll('[class*="item"], [class*="option"], li, .dropdown-item'));
+              };
+
+              const clickItem = (textMatch) => {
+                const items = getItems();
+                for (const node of items) {
+                  const text = normalize(node.textContent || '');
+                  if (text === textMatch) {
+                    node.click();
+                    return true;
+                  }
+                }
+                return false;
+              };
+
+              let categoryTrigger = null;
+              let serverTrigger = null;
+              let currentCategory = null;
+              let currentServer = null;
+
+              // Find all buttons and categorize them
+              for (const trigger of getTriggers()) {
+                const text = normalize(trigger.textContent || '');
+                if (text === 'sub' || text === 'dub') {
+                  categoryTrigger = trigger;
+                  currentCategory = text;
+                } else if (['telli', 'ally', 'bee', 'bun', 'nun', 'kiwi', 'dune'].includes(text)) {
+                  serverTrigger = trigger;
+                  currentServer = text;
+                }
+              }
+
+              const needsCategoryChange = currentCategory && currentCategory !== targetCategory;
+              const needsServerChange = currentServer && currentServer !== targetServer;
+              const changeRequested = needsCategoryChange || needsServerChange;
+
+              // Check if target server/category exists in available items
+              const availableItems = getItems().map(n => normalize(n.textContent || ''));
+              const hasTargetCategory = availableItems.includes(targetCategory);
+              const hasTargetServer = availableItems.includes(targetServer);
+
+              if (needsCategoryChange && categoryTrigger && hasTargetCategory) {
+                categoryTrigger.click();
+                await new Promise((resolve) => setTimeout(resolve, 600));
+                clickItem(targetCategory);
+                await new Promise((resolve) => setTimeout(resolve, 800));
+              }
+
+              if (needsServerChange && serverTrigger && hasTargetServer) {
+                serverTrigger.click();
+                await new Promise((resolve) => setTimeout(resolve, 600));
+                clickItem(targetServer);
+                await new Promise((resolve) => setTimeout(resolve, 800));
+              }
+
+              return { changeRequested, currentCategory, currentServer, hasTargetCategory, hasTargetServer, availableItems };
+            },
+            { server: serverName, categoryLabel: category }
+          );
+        }
+      } catch (iframeError) {
+        console.log('[extractM3u8WithPuppeteer] Iframe interaction error:', iframeError.message);
+      }
+    }
+
+    // Fallback: try parent page controls if iframe didn't work
+    if (!selectionResult) {
+      selectionResult = await page.evaluate(
+        async ({ server, categoryLabel }) => {
+          const normalize = (value) => String(value || '').toLowerCase().trim();
+          const targetServer = normalize(server);
+          const targetCategory = normalize(categoryLabel);
+
+          const getTriggers = () => Array.from(document.querySelectorAll('button[class*="_trigger_"], [class*="server"], [class*="category"]'));
+          const getItems = () => Array.from(document.querySelectorAll('[class*="_item_"], [class*="option"]'));
+
+          const clickItem = (textMatch) => {
+            for (const node of getItems()) {
+              const text = normalize(node.textContent || '');
+              if (text === textMatch) {
+                const target = node.closest('button') || node;
+                target.click();
+                return true;
+              }
+            }
+            return false;
+          };
+
+          let categoryTrigger = null;
+          let serverTrigger = null;
+          let currentCategory = null;
+          let currentServer = null;
+
+          for (const trigger of getTriggers()) {
+            const text = normalize(trigger.textContent || '');
+            if (text === 'sub' || text === 'dub') {
+              categoryTrigger = trigger;
+              currentCategory = text;
+            } else if (['telli', 'ally', 'bee', 'bun', 'nun', 'kiwi', 'dune'].includes(text)) {
+              serverTrigger = trigger;
+              currentServer = text;
             }
           }
-          return false;
-        };
 
-        let categoryTrigger = null;
-        let serverTrigger = null;
-        let currentCategory = null;
-        let currentServer = null;
+          const needsCategoryChange = currentCategory && currentCategory !== targetCategory;
+          const needsServerChange = currentServer && currentServer !== targetServer;
+          const changeRequested = needsCategoryChange || needsServerChange;
 
-        for (const trigger of getTriggers()) {
-          const text = normalize(trigger.textContent || '');
-          if (text === 'sub' || text === 'dub') {
-            categoryTrigger = trigger;
-            currentCategory = text;
-          } else if (text) {
-            serverTrigger = trigger;
-            currentServer = text;
+          if (needsCategoryChange && categoryTrigger) {
+            categoryTrigger.click();
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            clickItem(targetCategory);
+            await new Promise((resolve) => setTimeout(resolve, 800));
           }
-        }
 
-        const needsCategoryChange = currentCategory && currentCategory !== targetCategory;
-        const needsServerChange = currentServer && currentServer !== targetServer;
-        const changeRequested = needsCategoryChange || needsServerChange;
+          if (needsServerChange && serverTrigger) {
+            serverTrigger.click();
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            clickItem(targetServer);
+            await new Promise((resolve) => setTimeout(resolve, 800));
+          }
 
-        if (needsCategoryChange && categoryTrigger) {
-          categoryTrigger.click();
-          await new Promise((resolve) => setTimeout(resolve, 200));
-          clickItem(targetCategory);
-        }
-
-        if (needsServerChange && serverTrigger) {
-          serverTrigger.click();
-          await new Promise((resolve) => setTimeout(resolve, 200));
-          clickItem(targetServer);
-        }
-
-        return { changeRequested, currentCategory, currentServer };
-      },
-      { server: serverName, categoryLabel: category }
-    );
+          return { changeRequested, currentCategory, currentServer };
+        },
+        { server: serverName, categoryLabel: category }
+      );
+    }
 
     if (!selectionResult?.changeRequested && initialM3u8) {
       await Promise.allSettled(responsePromises);
@@ -626,7 +728,7 @@ const extractM3u8WithPuppeteer = async (targetUrl, referer, serverName, category
     }
 
     m3u8Url = null;
-    const endAt = Date.now() + 10000;
+    const endAt = Date.now() + 8000;
     while ((!m3u8Url || m3u8Url === initialM3u8) && Date.now() < endAt) {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
@@ -669,28 +771,30 @@ const extractM3u8WithPuppeteer = async (targetUrl, referer, serverName, category
 
           if (categoryTrigger && otherCategory) {
             categoryTrigger.click();
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 500));
             clickItem(otherCategory);
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 800));
             categoryTrigger.click();
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 500));
             clickItem(targetCategory);
+            await new Promise((resolve) => setTimeout(resolve, 800));
           }
 
           if (serverTrigger && otherServer) {
             serverTrigger.click();
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 500));
             clickItem(otherServer);
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 800));
             serverTrigger.click();
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 500));
             clickItem(targetServer);
+            await new Promise((resolve) => setTimeout(resolve, 800));
           }
         },
         { server: serverName, categoryLabel: category }
       );
 
-      const retryEndAt = Date.now() + 10000;
+      const retryEndAt = Date.now() + 8000;
       while ((!m3u8Url || m3u8Url === initialM3u8) && Date.now() < retryEndAt) {
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
@@ -853,17 +957,84 @@ export const getMiruroEpisodeSources = async ({ animeEpisodeId, ep, server, cate
     console.log('[getMiruroEpisodeSources] Fetch error:', error.message);
   }
 
+  // Try direct API call first (most reliable for sub/dub differentiation)
+  try {
+    const apiBaseUrls = {
+      'telli': 'https://telli.2anime.xyz',
+      'ally': 'https://ally.2anime.xyz',
+      'bee': 'https://bee.2anime.xyz',
+      'bun': 'https://bun.2anime.xyz',
+      'nun': 'https://nun.2anime.xyz',
+      'kiwi': 'https://kiwi.2anime.xyz',
+      'dune': 'https://dune.2anime.xyz',
+    };
+    const apiBase = apiBaseUrls[normalizedServer] || apiBaseUrls['telli'];
+
+    // Try multiple API endpoints that might return different m3u8 for sub/dub
+    const apiEndpoints = [
+      `${apiBase}/api/video?id=${animeId}&ep=${episodeNumber}&dub=${normalizedCategory === 'dub' ? 1 : 0}`,
+      `${apiBase}/api/source?id=${animeId}&ep=${episodeNumber}&dub=${normalizedCategory === 'dub' ? 1 : 0}`,
+      `${apiBase}/api/stream?id=${animeId}&ep=${episodeNumber}&dub=${normalizedCategory === 'dub' ? 1 : 0}`,
+      `${apiBase}/api/v1/m3u8/${animeId}/${episodeNumber}?dub=${normalizedCategory === 'dub' ? 1 : 0}`,
+    ];
+
+    for (const apiUrl of apiEndpoints) {
+      try {
+        const resp = await axios.get(apiUrl, {
+          headers: {
+            'User-Agent': DEFAULT_UA,
+            'X-Requested-With': 'XMLHttpRequest',
+            Referer: `${apiBase}/`,
+            Accept: 'application/json,text/plain,*/*',
+          },
+          timeout: 8000,
+          validateStatus: () => true,
+        });
+
+        if (resp.data) {
+          const m3u8 = extractM3u8FromPayload(resp.data);
+          if (m3u8) {
+            const meta = await resolveM3u8Metadata(m3u8, apiBase);
+            const skipData = await applySkipData(meta.intro, meta.outro, animeId, episodeNumber);
+            return withCache({
+              animeId,
+              episode: episodeNumber,
+              sourcePage: watchUrl,
+              sources: [{
+                source: m3u8,
+                type: 'm3u8',
+                quality: null,
+                referer: apiBase,
+                server: normalizedServer,
+                category: normalizedCategory,
+              }],
+              tracks: meta.tracks,
+              intro: skipData.intro ?? meta.intro,
+              outro: skipData.outro ?? meta.outro,
+              note: `m3u8 from ${normalizedCategory} API`,
+            });
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+  } catch (apiError) {
+    console.log('[getMiruroEpisodeSources] Direct API error:', apiError.message);
+  }
+
   // Try to get embed page source
   try {
-    // Construct potential embed URLs based on server
+    // Construct potential embed URLs based on server and category (sub/dub)
+    const dubParam = normalizedCategory === 'dub' ? '?dub=1' : '';
     const serverUrls = {
-      'telli': `https://telli.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'ally': `https://ally.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'bee': `https://bee.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'bun': `https://bun.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'nun': `https://nun.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'kiwi': `https://kiwi.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'dune': `https://dune.2anime.xyz/embed/${animeId}/${episodeNumber}`,
+      'telli': `https://telli.2anime.xyz/embed/${animeId}/${episodeNumber}${dubParam}`,
+      'ally': `https://ally.2anime.xyz/embed/${animeId}/${episodeNumber}${dubParam}`,
+      'bee': `https://bee.2anime.xyz/embed/${animeId}/${episodeNumber}${dubParam}`,
+      'bun': `https://bun.2anime.xyz/embed/${animeId}/${episodeNumber}${dubParam}`,
+      'nun': `https://nun.2anime.xyz/embed/${animeId}/${episodeNumber}${dubParam}`,
+      'kiwi': `https://kiwi.2anime.xyz/embed/${animeId}/${episodeNumber}${dubParam}`,
+      'dune': `https://dune.2anime.xyz/embed/${animeId}/${episodeNumber}${dubParam}`,
     };
 
     const embedUrl = serverUrls[normalizedServer] || serverUrls['telli'];
@@ -963,28 +1134,54 @@ export const getMiruroEpisodeSources = async ({ animeEpisodeId, ep, server, cate
 
   // Headless fallback to capture m3u8 from dynamic requests
   try {
-    const serverUrls = {
-      'telli': `https://telli.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'ally': `https://ally.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'bee': `https://bee.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'bun': `https://bun.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'nun': `https://nun.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'kiwi': `https://kiwi.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-      'dune': `https://dune.2anime.xyz/embed/${animeId}/${episodeNumber}`,
-    };
+    const serverList = ['telli', 'ally', 'bee', 'bun', 'nun', 'kiwi', 'dune'];
+    let m3u8 = null;
+    let mediaData = null;
+    let usedServer = normalizedServer;
+    let serverAvailable = true;
 
-    const embedTarget = serverUrls[normalizedServer] || serverUrls['telli'];
+    // First try the requested server
+    console.log(`[getMiruroEpisodeSources] Trying puppeteer for ${normalizedServer} ${normalizedCategory}`);
     const watchResult = await extractM3u8WithPuppeteer(
       watchUrl,
       MIRURO_BASE_URL,
       normalizedServer,
       normalizedCategory
     );
-    const embedResult = watchResult?.m3u8Url
-      ? null
-      : await extractM3u8WithPuppeteer(embedTarget, MIRURO_BASE_URL, normalizedServer, normalizedCategory);
-    const m3u8 = watchResult?.m3u8Url || embedResult?.m3u8Url || null;
-    const mediaData = watchResult?.mediaData || embedResult?.mediaData || null;
+
+    if (watchResult?.m3u8Url) {
+      m3u8 = watchResult.m3u8Url;
+      mediaData = watchResult.mediaData;
+    }
+
+    // If no m3u8, try other servers as fallback
+    if (!m3u8) {
+      console.log(`[getMiruroEpisodeSources] ${normalizedServer} failed, trying other servers...`);
+      for (const server of serverList) {
+        if (server === normalizedServer) continue;
+
+        try {
+          console.log(`[getMiruroEpisodeSources] Trying fallback server: ${server}`);
+          const fallbackResult = await extractM3u8WithPuppeteer(
+            watchUrl,
+            MIRURO_BASE_URL,
+            server,
+            normalizedCategory
+          );
+
+          if (fallbackResult?.m3u8Url) {
+            m3u8 = fallbackResult.m3u8Url;
+            mediaData = fallbackResult.mediaData;
+            usedServer = server;
+            serverAvailable = false;
+            console.log(`[getMiruroEpisodeSources] Success with fallback server: ${server}`);
+            break;
+          }
+        } catch {
+          continue;
+        }
+      }
+    }
 
     if (m3u8) {
       const meta = await resolveM3u8Metadata(m3u8, MIRURO_BASE_URL);
@@ -992,6 +1189,11 @@ export const getMiruroEpisodeSources = async ({ animeEpisodeId, ep, server, cate
       const skipData = extractSkipData(mediaData);
       const tracks = extractedTracks.length ? extractedTracks : meta.tracks;
       const fallbackSkip = await applySkipData(skipData.intro, skipData.outro, animeId, episodeNumber);
+
+      const note = serverAvailable
+        ? 'm3u8 captured from headless browser requests'
+        : `m3u8 captured from fallback server (${usedServer} instead of ${normalizedServer})`;
+
       return withCache({
         animeId,
         episode: episodeNumber,
@@ -1002,14 +1204,14 @@ export const getMiruroEpisodeSources = async ({ animeEpisodeId, ep, server, cate
             type: 'm3u8',
             quality: null,
             referer: MIRURO_BASE_URL,
-            server: normalizedServer,
+            server: usedServer,
             category: normalizedCategory,
           },
         ],
         tracks,
         intro: fallbackSkip.intro ?? meta.intro,
         outro: fallbackSkip.outro ?? meta.outro,
-        note: 'm3u8 captured from headless browser requests',
+        note,
       });
     }
   } catch (headlessError) {
