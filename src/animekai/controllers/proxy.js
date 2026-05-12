@@ -1,3 +1,27 @@
-import { proxyController } from '../../controllers/proxy.js';
+export const animekaiProxyController = async (c) => {
+  try {
+    const url = c.req.query('url');
+    if (!url) {
+      return c.json(
+        {
+          success: false,
+          error: 'URL parameter is required',
+        },
+        400
+      );
+    }
 
-export const animekaiProxyController = proxyController;
+    const response = await fetch(url);
+    const data = await response.text();
+
+    return c.text(data, response.status);
+  } catch (error) {
+    return c.json(
+      {
+        success: false,
+        error: error.message,
+      },
+      500
+    );
+  }
+};
